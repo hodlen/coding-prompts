@@ -20,17 +20,17 @@
 
 ## Errors and safety
 
-- Crash fast. No empty catch/except blocks, no defensive noise.
+- Crash fast and loudly. No empty catch/except blocks, no defensive noise.
 - Add error handling only when there is a concrete recovery path.
 
 ## Terminal and scripts
 
 - For one-off tasks, prefer short, composable shell pipelines. Avoid large, one-shot throwaway scripts.
-- For repeatable workflows, extract scripts (`scripts/` or `package.json`/`pyproject.toml` scripts).
+- For repeatable workflows, extract scripts (`scripts/` or `package.json`/`pyproject.toml` inline scripts).
 
-## 6. Project notes
+## Project notes
 
-- If `CLAUDE.md` (or `AGENT_NOTES.md`) exists, read it first and follow its conventions.
+- If `CLAUDE.md` (or `AGENT.md`) exists, read it first and follow its conventions.
 - When changing core data flow, project artechitecture or module boundaries, propose an update to that file.
 
 # Tool use
