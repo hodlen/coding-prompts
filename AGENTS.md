@@ -15,6 +15,13 @@
 ## Readability, docs and comments
 
 - Code must be readable without comments: clear names, clear signatures, clear types.
+- Comments are only for non-obvious tradeoffs, invariants, constraints or domain reasoning.
+- Do **not** write changelog-style comments or historical notes (e.g. "replaced by X", "moved to Y").
+- Explanations tied to runtime behavior (exceptional/failsafe branches taken, unusual states) belong in structured logging (`logger.debug/info`), **not** in comments.
+
+## Readability, docs and comments
+
+- Code must be readable without comments: clear names, clear signatures, clear types.
 - Comments are only for non-obvious tradeoffs, gotchas and invariants.
 - Do **not** write changelog-style comments and or historical notes (e.g. "replaced by X", "moved to Y"). Docs describe the current behavior, not its history.
 
