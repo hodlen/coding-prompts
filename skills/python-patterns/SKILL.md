@@ -1,55 +1,43 @@
 ---
 name: python-patterns
-description: Python-specific patterns for backend services. Supplements general coding principles.
+description: Python-specific patterns and conventions. Assumes the general architecture/FP principles already apply.
 ---
 
 # Python Patterns
 
-## Type System
+## Typing
 
-- Use modern syntax: `str | None`, `list[str]`, `dict[str, int]` (not `Optional`, `Union`, `List`, `Dict`)
-- Never use `Any` if you inspect the structure—define it with `TypedDict` or Pydantic
-- Use `object` for opaque passthrough (not `Any`)
+- Use modern syntax: `X | None`, `list[X]`, `dict[K, V]`. Avoid `Optional/Union/List/Dict`.
+- Avoid `Any`. Use:
+  - Pydantic models for runtime-validated structures (especially at boundaries).
+  - `TypedDict` for lightweight internal dict shapes when runtime validation is unnecessary.
+  - `object` only for opaque passthrough (must not be inspected).
+- Prefer `from __future__ import annotations` in libraries to reduce runtime import coupling.
 
-## Pydantic as Contract
+## Pydantic
 
-- All API boundaries require Pydantic models with validators
-- Use `BaseSettings` for configuration (reads from `.env`)
-- Strict validation at edges, types propagate inward
+- Use Pydantic for boundary models (HTTP, queue messages, config, DB row decoding where shape is not guaranteed).
+- Keep validators narrow: shape, basic constraints, normalization. Do not embed workflow logic or IO in validators.
+- Prefer explicit schema/versioning for externally consumed payloads (e.g., `v1`, `v2` modules or version fields).
 
-## Error Handling
+## Errors
 
-- Only catch exceptions with legitimate recovery strategy
-- Let it crash fast—no `except Exception: return None`
-- Catching specific exceptions for fallback is sound; catching to suppress is not
+- Catch exceptions only with a concrete recovery path; otherwise let them propagate.
+- Avoid blanket handlers (`except Exception`) and silent fallbacks.
+- Use structured, typed errors for expected failure modes (dataclasses/Enums). Add context when re-raising infrastructure errors.
 
-## State Management
+## Dependency and Resource Management
 
-- `@cache` wrapped functions for singleton object (not singleton classes)
-- FastAPI `Depends` with `yield` for per-request resources
-- Reserve classes for multiple instances or complex lifecycle
+- Prefer function-shaped dependencies and explicit factories.
+- For process-wide singletons, use `@functools.cache` on constructors when safe.
 
-## Async
+## Database and Migrations
 
-- In async context, never use sync I/O (`requests`, `psycopg2`, `open()`)
-- Use async equivalents: `httpx`, `asyncpg`, `aiofiles`
-- Background tasks must handle `asyncio.CancelledError` for graceful shutdown
+- Transactional DB schema changes only via migrations.
+- Prefer explicit SQL for analytical engines; avoid ORMs that obscure query shape/performance.
+- Treat query results as untrusted input; validate/normalize before use if shape can drift.
 
-## Database
+## Structure and Imports
 
-- Schema changes only via migration files (dbmate)
-- Leverage engine features (ClickHouse MergeTree ORDER BY for upserts) over application logic
-- Direct SQL via client, not ORM for analytical databases
-
-## Structure
-
-- Group by domain, not layer (`api/inventory.py` not `controllers/inventory_controller.py`)
-- Extract pure business logic to `utils/`—makes testing trivial
-- FastAPI routers = thin handlers, dependencies = resource management, utils = logic
-
-## Checklist
-
-- [ ] No `Any` unless opaque passthrough
-- [ ] Pydantic for boundaries
-- [ ] Async libs in async context
-- [ ] Migrations for schema changes
+- Organize by domain modules; keep framework/router modules thin.
+- Avoid `utils/` as a general bucket. Create named modules with clear ownership.
