@@ -9,7 +9,7 @@ description: Python-specific patterns and conventions. Assumes the general archi
 
 - Use modern syntax: `X | None`, `list[X]`, `dict[K, V]`. Avoid `Optional/Union/List/Dict`.
 - Avoid `Any`. Use:
-  - Pydantic models for runtime-validated structures (especially at boundaries).
+  - Pydantic models for runtime-validated structures.
   - `TypedDict` for lightweight internal dict shapes when runtime validation is unnecessary.
   - `object` only for opaque passthrough (must not be inspected).
 - Prefer `from __future__ import annotations` in libraries to reduce runtime import coupling.
@@ -19,6 +19,11 @@ description: Python-specific patterns and conventions. Assumes the general archi
 - Use Pydantic for boundary models (HTTP, queue messages, config, DB row decoding where shape is not guaranteed).
 - Keep validators narrow: shape, basic constraints, normalization. Do not embed workflow logic or IO in validators.
 - Prefer explicit schema/versioning for externally consumed payloads (e.g., `v1`, `v2` modules or version fields).
+
+## Pandas
+
+- Avoid any `if df.empty:` for new code. Instead, normalize DataFrame columns and types when appropriate, and handle empty DataFrames unconditionally.
+- Avoid `df.col_name` and use `df["col_name"]` instead, rewriting when necessary. 
 
 ## Errors
 
@@ -30,12 +35,6 @@ description: Python-specific patterns and conventions. Assumes the general archi
 
 - Prefer function-shaped dependencies and explicit factories.
 - For process-wide singletons, use `@functools.cache` on constructors when safe.
-
-## Database and Migrations
-
-- Transactional DB schema changes only via migrations.
-- Prefer explicit SQL for analytical engines; avoid ORMs that obscure query shape/performance.
-- Treat query results as untrusted input; validate/normalize before use if shape can drift.
 
 ## Structure and Imports
 
