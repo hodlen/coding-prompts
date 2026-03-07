@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-set -ex
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-mkdir -p ~/.claude/ && ln -sfn AGENTS.md  ~/.claude/CLAUDE.md && ln -sfn skills ~/.claude/skills
-mkdir -p ~/.codex/ && ln -sfn AGENTS.md ~/.codex/prompts && ln -sfn skills ~/.codex/skills
+mkdir -p "$HOME/.claude"
+ln -sfn "$SCRIPT_DIR/AGENTS.md" "$HOME/.claude/CLAUDE.md"
+ln -sfn "$SCRIPT_DIR/skills" "$HOME/.claude/skills"
+
+mkdir -p "$HOME/.codex"
+ln -sfn "$SCRIPT_DIR/AGENTS.md" "$HOME/.codex/prompts"
+ln -sfn "$SCRIPT_DIR/skills" "$HOME/.codex/skills"
