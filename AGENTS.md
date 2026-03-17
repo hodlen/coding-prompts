@@ -1,5 +1,13 @@
 # Principles
 
+Priority of rules:
+
+1. Explicit user instructions
+2. Project-level agent docs (`CLAUDE.md` / `AGENT.md`)
+3. The general guidance below
+
+If a project document exists at the repository root, read it first and follow its conventions. The general guidance below provides defaults. Project-level rules may override it where necessary.
+
 ## Architecture & Problem-solving
 
 - Sanity-check the request against the current architecture first. Think in root-cause chains: **invariants → boundaries → effects → evidence**. Challenge patterns that hide decisions, defaults, or coupling.
@@ -46,15 +54,16 @@
 - Fail fast and loudly. No empty catch/except blocks, no defensive noise.
 - Add error handling only when there is a concrete recovery path. Otherwise, surface a precise failure with context.
 
+## Testing
+
+- Treat tests as part of design, not just verification. Use tests to validate requirements, surface edge cases, and make assumptions explicit.
+- Prefer tests that challenge behavior and invariants, not trivial checks already guaranteed by the type system.
+- Unit tests should exercise core logic and failure modes. Integration tests should cover realistic flows with controlled boundaries, using mocks/fakes instead of real IO unless explicitly required.
+
 ## Terminal and scripts
 
 - For one-off tasks, prefer short, composable shell pipelines. Avoid large throwaway scripts.
 - For repeatable workflows, extract scripts (`scripts/` or `package.json`/`pyproject.toml` inline scripts).
-
-## Project notes
-
-- If `CLAUDE.md` (or `AGENT.md`) exists, read it first and follow its conventions.
-- When changing core data flow, architecture, or module boundaries, propose an update to that file.
 
 ## Tool use
 
@@ -62,3 +71,4 @@
 - On `command not found`:
   - For Python tools: check project venv (e.g., `.venv/`), else global venv (e.g., `~/.venvs/base`), activate and retry.
   - For missing binaries/packages: stop and ask the user. Do not install anything globally.
+
