@@ -38,5 +38,6 @@ description: Python-specific patterns and conventions. Assumes the general archi
 
 ## Structure and Imports
 
-- Organize by domain modules; keep framework/router modules thin.
-- Avoid `utils/` as a general bucket. Create named modules with clear ownership.
+- Organize code by domain; keep framework, router, and transport layers thin.
+- Avoid re-exporting from `__init__.py` unless it materially improves the public module boundary.
+- Do not use `utils/` as a catch-all. Create small, named modules with clear responsibility.
