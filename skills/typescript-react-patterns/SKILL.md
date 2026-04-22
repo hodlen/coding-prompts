@@ -49,6 +49,8 @@ Only include reactive values (props, state, context, component-scoped variables)
 - Generate types from backend: `pydantic2zod` in build pipeline
 - Runtime validation at boundaries: `z.array(Schema).parse(data)`
 - No duplicate type definitions
+- Internal domain states: prefer discriminated unions over optional fields that implicitly encode states. E.g. `{ kind: 'loading' } | { kind: 'ready'; data: T } | { kind: 'error'; error: E }` instead of `{ data?: T; error?: E; loading: boolean }`. Exhaustive `switch` on `kind` makes illegal states unrepresentable.
+- ID types that should not be interchangeable: use branded types (`type UserId = string & { readonly __brand: 'UserId' }`) so `UserId` and `OrderId` do not silently assign to each other.
 
 ## Decision Tree
 

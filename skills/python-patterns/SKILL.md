@@ -29,7 +29,8 @@ description: Python-specific patterns and conventions. Assumes the general archi
 
 - Catch exceptions only with a concrete recovery path; otherwise let them propagate.
 - Avoid blanket handlers (`except Exception`) and silent fallbacks.
-- Use structured, typed errors for expected failure modes (dataclasses/Enums). Add context when re-raising infrastructure errors.
+- For in-process compute failures with a meaningful branch, encode the failure in the return shape (dataclass, `Enum`, or tagged union via `Literal` discriminators). Reserve exceptions for truly exceptional or cross-layer infrastructure paths; when re-raising, add context.
+- When a function has a meaningful degraded path (cache fallback, retry exhaustion, stale read), make it visible in the return shape — not hidden behind a success-looking return with side-channel signaling.
 
 ## Dependency and Resource Management
 
