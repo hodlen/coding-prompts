@@ -22,7 +22,7 @@ description: Python-specific patterns and conventions. Assumes the general archi
 
 ## Pandas
 
-- Avoid any `if df.empty:` for new code. Instead, normalize DataFrame columns and types when appropriate, and handle empty DataFrames unconditionally.
+- In new code, avoid `if df.empty:` unless a downstream operation requires non-empty input (e.g., `.min()`, `.max()`, `.iloc[0]`, single-row indexing). Otherwise, normalize DataFrame columns and types up front and let the pipeline handle empty DataFrames unconditionally.
 - Avoid `df.col_name` and use `df["col_name"]` instead, rewriting when necessary. 
 
 ## Errors
