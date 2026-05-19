@@ -48,8 +48,9 @@ description: Python-specific patterns and conventions. Assumes the general archi
 
 The general "no comments unless the WHY is non-obvious" rule applies. Python-specific corollaries:
 
-- **Prefer prose-with-WHY over Google-style `Args:`/`Returns:` blocks.** Lead with the contract; add WHYs only for hidden constraints, version-specific workarounds, or invariants the caller must uphold. Reach for `Args:`/`Returns:`/`Raises:` only when there's a real constraint the type/name can't express — and write *just that constraint*.
-- **A docstring earns its keep for:** public API contracts (PIT, idempotency, atomicity, ordering); non-obvious workarounds; caller invariants; failure modes not implied by the return type (use `Raises:`).
+- **Decision rule.** Delete the docstring mentally. If the reader only loses information already in the name and types, delete it for real. If the reader loses a constraint the caller must know, keep it — and rewrite it so it says *just that constraint*.
+- **Default by visibility.** Public/non-trivial functions: a one-line semantic summary, plus a short body only when there's a real contract (PIT, idempotency, atomicity, ordering, caller invariants, version-specific workarounds, failure modes the type doesn't imply). Private/trivial functions: usually no docstring.
+- **Prefer prose-with-WHY over Google-style blocks.** Reach for `Args:`/`Returns:`/`Yields:`/`Raises:` only when the type/name can't express the constraint — and write *just that constraint*, not a paraphrase of the parameter name. `Examples:` only when the usage pattern is non-obvious.
 - **Dataclass/Pydantic field docs** follow the same rule: drop `key: Document key within the topic`; keep `must be timezone-aware`.
 - **Delete on sight:** `Args:` blocks that restate the param name, `Returns:` blocks that restate the type, class docstrings paraphrasing the class name (`"""User class."""`), and comments narrating the next line (`# increment counter`).
 - **Inline comments** follow the same WHY-only rule, more strictly. Reserve them for library footguns (`# argMax skips NULLs silently`), invariants being relied on, or workarounds whose reason isn't visible. Never write changelog comments (`# replaced by X`) — git history is the changelog.
