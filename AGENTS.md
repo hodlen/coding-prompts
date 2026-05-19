@@ -97,6 +97,6 @@ It is acceptable to skip tests when there is no meaningful executable boundary â
 
 ### Tooling and closing check
 
-For one-off tasks, prefer short composable shell commands. For repeatable workflows, use the repository's standard script mechanism. Avoid large throwaway scripts and do not install global dependencies.
+For one-off tasks, prefer short composable shell commands. For repeatable workflows, use the repository's standard script mechanism. Avoid large throwaway scripts and do not install global dependencies. Most read-only tools under PWD are auto-approved â€” invoke them with the most common and consise form and prefer command composition to benefit from the auto-approval. Don't use one complex command for two things. For example, DO NOT USE `find ... -exec`, use `grep -r ... --include ...` instead; DO NOT USE `git -C`, use `cd ... && git ...` instead.
 
 Before finishing, confirm the chosen scope is still the smallest clean scope, important contracts and boundaries remain explicit, any breaking change had all relevant call forms checked via `grep`, and the result matches the user's request rather than an inferred larger agenda.
