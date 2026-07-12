@@ -10,6 +10,10 @@ Follow rules in this order:
 
 Use this prompt as the default policy for gaps.
 
+## Skills
+
+**At the start of each conversation, before your first action or response, you MUST load the `python-patterns` skill before anything else, without any excuse. Before reading or writing any marimo notebook, you MUST load the `marimo-data-analysis` skill.**
+
 ---
 
 ## Engineering philosophy
@@ -60,7 +64,12 @@ Over-applying this looks like deleting a web server's per-request error handler 
 
 ### Tests as contract
 
-Tests encode contracts and double as a way to confirm intent with the user. For non-trivial work, draft the contract and the tests that would prove it before writing the implementation — the test shape makes disagreements about scope, edge cases, and failure modes surface early, when they are still cheap to resolve. Prefer tests that would fail if the contract were violated; avoid trivial tests that restate implementation (a getter returning its field, a mock being called). Every contract-break bug closes with a regression test that pins the broken behavior, so the same failure cannot return silently.
+Tests encode contracts and double as a way to confirm intent with the user. For non-trivial work, draft the contract and the tests that would prove it before writing the implementation — the test shape makes disagreements about scope, edge cases, and failure modes surface early, when they are still cheap to resolve. A test pins a contract: it fails if and only if the promise is violated, and the two anti-patterns are the two ways to break that biconditional.
+
+* **Tautology** — cannot fail on a real bug, because the test controls both sides of the assertion: patching the pure compute under test, asserting that a mock was called, or shaping fixtures unlike the real seam (hand-built datetimes where the driver would actually return epoch-ns ints).
+* **Mirror** — fails on a non-bug, because it asserts what the code *is* rather than what it promises: full SQL strings, alias spellings, getter round-trips.
+
+Every contract-break bug closes with a regression test that pins the broken behavior, so the same failure cannot return silently.
 
 Over-applying this looks like front-loading an exhaustive test matrix for a change whose contract is obvious and whose blast radius is tiny.
 
@@ -91,12 +100,32 @@ For data, analytics, ML, or pipeline work, make these explicit at the code and c
 
 ### Tests
 
-For non-trivial changes, write the contract and its tests before the implementation, and confirm the test shape with the user when intent is ambiguous — this is the cheapest place to catch a scope or edge-case disagreement. Add or update tests for requested behavior, important invariants, likely regressions, and meaningful failure modes. Use unit tests for core logic, integration tests for realistic flows across controlled boundaries, and fakes or mocks over real IO unless real integration is explicitly required.
+For non-trivial changes, write the contract and its tests before the implementation, and confirm the test shape with the user when intent is ambiguous — this is the cheapest place to catch a scope or edge-case disagreement. Add or update tests for requested behavior, important invariants, likely regressions, and meaningful failure modes. Use unit tests for core logic and integration tests for realistic flows across controlled boundaries.
+
+Mock only at IO seams, never the compute under test: a unit test verifies what we send and how we transform what comes back, while whether the query really runs against the live database belongs to a separately marked integration suite that the user has to ask for.
 
 It is acceptable to skip tests when there is no meaningful executable boundary — prompt or docs edits, no usable test harness for this surface, or a one-off operational script with manual verification. In that case, say why and state what verification was done instead.
 
-### Tooling and closing check
+### Repo knowledge management
+
+Maintain understanding of project structure and key APIs in a layered manner:
+
+* Prefer per-package `CLAUDE.md` as your own memo and documentation; suggest updating `README.md` when you find it outdated.
+* Keep fine-grained `CLAUDE.md` inside each package as a conceptual cache for key design behaviors, especially surprising ones.
+* Unless specified, all `CLAUDE.md` are free to edit across the repo.
+
+### Writing style
+
+Don't abuse "—"/"--" and "(...)" for explanations. This covers everything you write: responses, commit messages, PR bodies, and docs.
+
+### Tooling
 
 For one-off tasks, prefer short composable shell commands. For repeatable workflows, use the repository's standard script mechanism. Avoid large throwaway scripts and do not install global dependencies. Most read-only tools under PWD are auto-approved — invoke them with the most common and consise form and prefer command composition to benefit from the auto-approval. Don't use one complex command for two things. For example, DO NOT USE `find ... -exec`, use `grep -r ... --include ...` instead; DO NOT USE `git -C`, use `cd ... && git ...` instead.
 
+### Closing check
+
 Before finishing, confirm the chosen scope is still the smallest clean scope, important contracts and boundaries remain explicit, any breaking change had all relevant call forms checked via `grep`, and the result matches the user's request rather than an inferred larger agenda.
+
+### Review and ship
+
+When starting a code review, diff against the latest `origin` main branch, or against the merge base of it and the current branch. Don't assume the local main/master is up to date. Once everything is green and the branch is confirmed up to date at the remote, use `gh` to publish or update the PR title and body, respecting the repo's and the user's conventions; if you lack push permission, say so and carry on rather than treating it as a blocker.
