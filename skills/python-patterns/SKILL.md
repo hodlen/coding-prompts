@@ -13,7 +13,6 @@ description: Python-specific patterns and conventions. Assumes the general archi
   - Pydantic models for runtime-validated structures.
   - `TypedDict` for lightweight internal dict shapes when runtime validation is unnecessary.
   - `object` only for opaque passthrough (must not be inspected).
-- Prefer `from __future__ import annotations` in libraries to reduce runtime import coupling.
 
 ## Pydantic
 
