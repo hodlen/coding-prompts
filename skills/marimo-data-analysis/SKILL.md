@@ -1,168 +1,90 @@
 ---
 name: marimo-data-analysis
-description: Reactive data analysis with Marimo. Use for Marimo notebooks and Python data analysis. Extends Python coding patterns.
+description: Marimo-specific notebook authoring and debugging for reactive cell boundaries, private and exported symbols, single-cell outputs, UI dependencies, and standalone execution. Use whenever reading, writing, fixing, or reviewing a Marimo `.py` notebook. Load alongside `python-patterns` for Python conventions.
 ---
 
 # Marimo Notebook Patterns
 
-## Core Constraints
+## Model the reactive graph
 
-- **Cell-wise reactivity upon args and return**: Every cell `return (vars,)` to export `vars`, and other cells can use it from args as `def _(vars, ...):`
-- **Cell outputs matter:**: Same as Jupyter, last unassgined statement before return would be displayed
-- **No duplicate variable names:** Marimo forbids reusing variable names across cells — use `_private` prefix for throwaway variables
-- **No temp variables:** Chain all transformations—use `.pipe()`, `.assign()`, `.filter()`, not intermediate assignments
-- **Pure functions:** Extract testable logic to separate modules
-- **Mandatory testing:** Every notebook can run standalone: `python notebooks/some_notebook.py`
-- **Imports and globals in setup:** All imports and global constants go in `with app.setup:` block, not in cells
+Marimo executes cells from name dependencies, not page order. Treat every cross-cell name as a graph edge.
 
-## Data Loading
+- Define each public top-level name in exactly one cell.
+- Receive upstream public names as cell parameters. Return only public names needed downstream.
+- Prefix cell-local values with `_`. Private names may repeat across cells, but another cell cannot depend on them.
+- If a private value is needed downstream, give it a descriptive public name and export it deliberately.
+- Use cell boundaries for meaningful reactive stages such as control, transform, and presentation. Do not make every statement a cell or put the whole notebook in one cell.
 
-```python
-with app.setup:
-    import sys
-    sys.path.append(".")
-    from base_prelude import mo, pd, mo_sql
+Keep local work private and expose the smallest meaningful result:
 
-    # Heavy loads here - runs once, globally available
-    full_blotter_df = mo_sql("SELECT * FROM inventory_blotter;", output=False)
-```
-
-Variables in `app.setup` are global—no need to pass as args. Put all non-reactive, zero-dependency imports/data here.
-
-## Piping Everything
-
-```python
-# ✓ Pure pipeline - no intermediates
-df
-    .query("nature == 'equity'")
-    .pipe(lambda x: x[x["units"].abs() > 0])  # Custom logic via pipe
-    .assign(signed_units=lambda x: x["side"].map({"LONG": 1, "SHORT": -1}) * x["units"])
-    .groupby(["date", "symbol"])
-    .agg({"signed_units": "sum", "units": "count"})
-    .pipe(lambda x: x[x["signed_units"].abs() > 1e-6])
-    .reset_index()
-
-# ✗ Temp variables cause name conflicts
-temp1 = df.query("condition")  # Can't reuse 'temp1' elsewhere!
-temp2 = temp1.groupby("key").sum()
-result = temp2[temp2["value"] > 0]
-```
-
-**For view-only output (charts, tables, displays):** Just make the value the last statement without assignment.
-
-```python
-# ✓ Complex agg + chart as unnamed output
-(
-    df
-    .groupby(["date", "strategy"])
-    .agg({"pnl": "sum", "trades": "count"})
-    .pipe(lambda x: alt.Chart(x.reset_index()).mark_bar().encode(
-        x="date:T", y="pnl:Q", color="strategy:N"
-    ))
-)  # No variable name needed - auto-displays chart
-```
-
-## Pure Functions for Logic
-
-```python
-def is_valid_pair(df: pd.DataFrame) -> bool:
-    """Pure, testable business logic"""
-    return (
-        len(df) == 2
-        and df["units"].nunique() == 1
-        and set(df["side"]) == {"LONG", "SHORT"}
-    )
-
-# Use in pipeline
-violations = (
-    df
-    .groupby(["date", "symbol"])
-    .filter(lambda x: not is_valid_pair(x))
-    .pipe(lambda x: x if not x.empty else None)
-)
-```
-
-Extract to `validation.py` for unit testing separate from notebook.
-
-## Reactive UI
-
-```python
-# Cell 1: Control (returns UI widget)
-date_picker = mo.ui.date_range(start="2025-10-01", stop=pd.Timestamp.now().date())
-date_picker  # Display widget
-return (date_picker,)
-
-# Cell 2: Auto-reacts when picker changes
-filtered = df.pipe(
-    lambda x: x.query(f"date >= '{date_picker.value[0]}' and date <= '{date_picker.value[1]}'")
-)
-filtered
-return (filtered,)
-```
-
-**Cell structure pattern:**
 ```python
 @app.cell
-def _(dep1, dep2):  # Dependencies as params
-    result = compute(dep1, dep2)
-    result  # Display (optional)
-    return (result,)  # Export for other cells
+def _(trades_df):
+    _active = trades_df.loc[trades_df["status"].eq("active")]
+    position_summary_df = summarize_positions(_active)
+    return (position_summary_df,)
 ```
 
-## Master-Detail Pattern
+## Produce one unconditional output
+
+A cell displays its final unassigned expression. Give a presentation cell exactly one unconditional final output expression.
+
+Do not leave display expressions inside `if`/`else` branches. Compute the branch result, then display it once:
 
 ```python
-table_ui = mo.ui.table(summary_df, selection="single")
-
-# Reactive detail view
-detail = (
-    full_df.query(f"symbol == '{table_ui.value.iloc[0]['symbol']}'")
-    if not table_ui.value.empty else None
-)
+@app.cell
+def _(mo, selection_df):
+    _output = (
+        mo.md("Select a row")
+        if selection_df.empty
+        else render_detail(selection_df)
+    )
+    _output
+    return
 ```
 
-## Testing
+Assign exported values on every execution path; never define a public name only inside one branch. For multiple visible objects, combine them with `mo.vstack`, `mo.hstack`, or another layout and display the layout once.
 
-Every notebook must be executable:
+When a cell both displays and exports a value, put the display expression immediately before the generated return:
+
+```python
+@app.cell
+def _(source_df):
+    summary_df = build_summary(source_df)
+    summary_df
+    return (summary_df,)
+```
+
+Use `_output` for view-only values so presentation details do not become graph edges.
+
+## Keep controls and views reactive
+
+- Export a UI control from the cell that creates it. A downstream cell reading `.value` must accept that control as a dependency.
+- Model empty selections, unset controls, and other expected UI states explicitly.
+- Produce one placeholder or one real view through the single-output pattern. Do not hide broad exceptions or rely on branch-local displays.
+
+## Keep logic modular and cells idempotent
+
+- Put reusable or non-trivial compute in pure functions, preferably in ordinary Python modules that unit tests can import.
+- Keep imports in ordinary cells by default. Use `with app.setup:` only for symbols that must exist before top-level function or class declarations; setup cannot depend on regular cells.
+- Do not mutate an object in a different cell from the one that creates it. Return a new value so Marimo can observe the dependency.
+- Keep IO at explicit edge cells. Given the same dependencies, compute and presentation cells should produce the same result.
+- Let unexpected failures surface. Make expected missing or degraded states visible in the value or rendered output.
+
+## Validate the notebook
+
+After editing, execute the full reactive program in the repository environment:
+
 ```bash
-python notebooks/my_analysis.py  # Must pass without errors
+python notebooks/my_analysis.py
 ```
 
-Extract pure functions to modules:
-```python
-# validation.py
-def check_trade_balance(df: pd.DataFrame) -> pd.DataFrame:
-    """Returns unbalanced trades"""
-    return df.groupby("trade_id").filter(lambda x: x["units"].sum().abs() > 1e-6)
+The dry run must exit successfully. It catches incorrect cell parameters, missing exports, duplicate definitions, setup-reference errors, and failures hidden by interactive state. Also run `marimo check <notebook.py>` when available, and unit-test extracted compute with the repository's normal test runner.
 
-# test_validation.py
-def test_check_trade_balance():
-    df = pd.DataFrame({"trade_id": [1, 1], "units": [100, -100]})
-    assert check_trade_balance(df).empty
-```
+Before finishing, verify:
 
-## Anti-Patterns
-
-| Wrong | Right |
-|-------|-------|
-| `temp = df.query(...); result = temp.groupby(...)` | `result = df.query(...).groupby(...)` |
-| `mo.md("text"); return` | `mo.md("text")` (last expression displays) |
-| `try: result = transform(df) except: result = None` | `result = transform(df)  # Let it crash` |
-| `for row in df.iterrows(): ...` | `.apply()`, `.pipe()`, vectorized ops |
-| Duplicate variable names across cells | Unique names or `_private` prefix |
-| `import pandas as pd` in cell | `with app.setup: import pandas as pd` |
-| Excessive `if data is None` checks | Trust reactive dependencies |
-
-## Quick Reference
-
-```python
-# Chain everything
-df.query("...").assign(col=lambda x: ...).pipe(lambda x: ...).groupby(...).agg(...)
-
-# Extract testable logic
-.pipe(pure_function)
-.groupby("key").filter(pure_predicate)
-
-# Conditional rendering
-result if condition else None
-```
+- every cell parameter comes from exactly one upstream export or setup
+- every downstream value is public and returned; every temporary value is private
+- every presentation cell has one unconditional final output expression
+- every exported name is assigned on every path
+- `python <notebook.py>` passes
