@@ -102,7 +102,7 @@ Let names, signatures, types, and structure carry intent. Comments and docstring
 
 Prefer short, composable commands for one-off work and the repository's script mechanism for repeatable workflows. Use `rg`/`rg --files` for textual and file searches when available. Do not install global dependencies or create large throwaway scripts.
 
-Git access is read-only. This is a standing authorization boundary, not a preference that a one-off task request can override. Allowed operations inspect state or history, such as `status`, `diff`, `log`, `show`, `blame`, `rev-parse`, `merge-base`, `ls-files`, and `branch --show-current`. Never run a Git command that changes the worktree, index, refs, repository configuration, submodules, worktrees, or remotes. This bans commands including `add`, `restore`, `checkout`, `switch`, `stash`, `commit`, `merge`, `rebase`, `cherry-pick`, `revert`, `reset`, `clean`, `tag`, `fetch`, `pull`, `push`, `config`, and mutating `worktree` or `submodule` operations. The user must invoke such commands personally.
+Git access is inspection-only. The user must run any operation that changes the worktree, index, refs, repository configuration, submodules, worktrees, or remotes.
 
 Do not create, publish, or update pull requests or other external artifacts unless the user explicitly requests that external action. During review, use the available remote-tracking refs and disclose when their freshness has not been verified.
 

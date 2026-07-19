@@ -1,0 +1,62 @@
+prefix_rule(
+    pattern = [
+        "git",
+        [
+            "add",
+            "commit",
+            "merge",
+            "rebase",
+            "reset",
+            "checkout",
+            "switch",
+            "cherry-pick",
+            "revert",
+            "stash",
+            "clean",
+            "apply",
+            "am",
+            "pull",
+            "push",
+        ],
+    ],
+    decision = "forbidden",
+    justification = "Git is inspection-only; the user must perform mutations.",
+)
+
+prefix_rule(
+    pattern = ["git", "fetch", "--prune"],
+    decision = "forbidden",
+    justification = "Git is inspection-only; the user must update remote-tracking refs.",
+)
+
+prefix_rule(
+    pattern = ["git", "branch", ["-d", "-D"]],
+    decision = "forbidden",
+    justification = "Git is inspection-only; the user must delete branches.",
+)
+
+prefix_rule(
+    pattern = ["git", "tag", "-d"],
+    decision = "forbidden",
+    justification = "Git is inspection-only; the user must delete tags.",
+)
+
+prefix_rule(
+    pattern = ["git", "remote", "remove"],
+    decision = "forbidden",
+    justification = "Git is inspection-only; the user must remove remotes.",
+)
+
+prefix_rule(
+    pattern = ["git", "-C"],
+    decision = "forbidden",
+    justification = "Run read-only Git commands from the repository working directory.",
+)
+
+prefix_rule(
+    pattern = ["find", "/"],
+    decision = "forbidden",
+    justification = "Do not search from the filesystem root; scope the search or use rg.",
+    match = ["find / -name '*.py'"],
+    not_match = ["find . -name '*.py'", "find src -type f"],
+)
