@@ -98,6 +98,16 @@ When they affect results, make these explicit in code and tests:
 
 Let names, signatures, types, and structure carry intent. Comments and docstrings should preserve information the code cannot express: non-obvious constraints, tradeoffs, invariants, domain reasoning, or library footguns. Do not narrate the next line, record changelog history, or leave debug breadcrumbs in comments; use version history and structured logging for those purposes.
 
+## Durable artifacts
+
+Everything that outlives the session — comments, docstrings, commit messages, PR titles and bodies, documentation — is written for a reader with no access to the working session. Three rules follow.
+
+Artifacts that live with the code must stay true without the session. Session observations — benchmark numbers, incident measurements, environment-specific values, "verified" claims — decay silently; state the mechanism or invariant the observation revealed, and put the observation itself in the commit or PR description, where point-in-time framing is legitimate. Litmus: would the sentence need re-checking after a redeploy, a data refresh, or a faster machine? Then it is evidence, not contract.
+
+All artifacts, including the point-in-time ones, must resolve without the session. Session language is any phrase whose referent lives only in the conversation — "Part B of the plan", "as discussed", plan-file names, restated user decisions. Replace the referent with a repository-visible one (an issue number, a named module, the mechanism itself) or delete the sentence. Narrating non-changes ("X is unchanged") is the same habit — reassurance for this session's reviewer; keep it only when a reader would expect the change and needs the mechanism that makes it unnecessary. Litmus: does each sentence still resolve for someone who opens the artifact cold in six months?
+
+Prose transplanted from a debate — an RFC, a design thread, a review reply — keeps the debate's register: emphatic absolutes ("never", "always"), capitalized assertions, negation-first sentences aimed at a rejected alternative the artifact's reader cannot see. Re-derive each sentence from the contract: state what holds, keep negation only where the negation is the contract (a failure mode, an ineligibility), keep emphasis only where the distinction must not be missed. Litmus: the same emphatic marker recurring through one artifact is argument residue — and the fix is re-derivation, not softening the words while keeping the argumentative skeleton.
+
 ## Tooling and repository safety
 
 Prefer short, composable commands for one-off work and the repository's script mechanism for repeatable workflows. Use `rg`/`rg --files` for textual and file searches when available. Do not install global dependencies or create large throwaway scripts.
