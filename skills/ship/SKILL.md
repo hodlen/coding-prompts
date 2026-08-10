@@ -8,6 +8,7 @@ description: Ship the current branch as a PR — verify branch is up to date wit
 `/ship` is explicit authorization to push the branch, create the PR, and push follow-up fixes. Merging requires a separate explicit approval for this specific PR (step 5) — never merge without it.
 
 1. **Preflight**: fetch and confirm the branch is up to date with its remote (push if only ahead; stop and report if dirty, behind, or diverged).
+   - **Downstream impact**: if the repo documents external consumers out of the repo and the diff changes a published package's public surface — renames, removals, signature/schema/behavior changes — search those consumer repos (`gh search code --owner <org> "<symbol>"`, skip archived repos) for uses of the changed surface. Fold confirmed impact into the PR body's breaking-changes note; flag to the user anything that needs a coordinated sweep in a consumer repo.
 2. **PR**: create it with `gh pr create` (reuse the branch's existing PR if any). Report the URL immediately.
 3. **Clean review**: launch a fresh background agent to run `/code-review` against the PR, so the review is unbiased by this session's context. Treat its findings like reviewer comments.
 4. **Watch 15 min**: poll PR comments, reviews, and CI checks every ~2-3 minutes (automated review typically responds within 15 min). Fix valid feedback → commit, push, reply; reply with reasoning if not actionable. Stop early once all feedback is addressed and checks are green.
