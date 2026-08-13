@@ -1,16 +1,24 @@
 ---
 name: ship
-description: Ship the current branch as a PR — verify branch is up to date with remote, create the PR with gh, launch a clean /code-review agent, then watch the PR for human/bot comments and iterate for 15 minutes. Can squash-merge (or stage an auto-merge) with the user's explicit per-PR approval.
+description: Ship the current branch as a PR — preflight, create with gh, run a clean /code-review, then watch comments and CI and iterate. Squash-merges only with explicit per-PR approval.
 ---
 
 # Ship
 
-`/ship` is explicit authorization to push the branch, create the PR, and push follow-up fixes. Merging requires a separate explicit approval for this specific PR (step 5) — never merge without it.
+Authorizes creating the PR and pushing follow-up fixes. Merging needs separate approval for this specific PR.
 
-1. **Preflight**: fetch and confirm the branch is up to date with its remote (push if only ahead; stop and report if dirty, behind, or diverged).
-   - **Downstream impact**: if the repo documents external consumers out of the repo and the diff changes a published package's public surface — renames, removals, signature/schema/behavior changes — search those consumer repos (`gh search code --owner <org> "<symbol>"`, skip archived repos) for uses of the changed surface. Fold confirmed impact into the PR body's breaking-changes note; flag to the user anything that needs a coordinated sweep in a consumer repo.
-2. **PR**: create it with `gh pr create` (reuse the branch's existing PR if any). Report the URL immediately.
-3. **Clean review**: launch a fresh background agent to run `/code-review` against the PR, so the review is unbiased by this session's context. Treat its findings like reviewer comments.
-4. **Watch 15 min**: poll PR comments, reviews, and CI checks every ~2-3 minutes (automated review typically responds within 15 min). Fix valid feedback → commit, push, reply; reply with reasoning if not actionable. Stop early once all feedback is addressed and checks are green.
-5. **Merge (with approval)**: once all feedback is addressed, ask the user (AskUserQuestion): merge now (CI green), stage auto-merge (`--auto`, CI pending), or don't merge. If approved: squash-merge with `--subject "<PR title> (#<num>)"` and a commit body written for `git log`, not the PR page — draft it for the user first. Slim flowing prose in the style of the repo's recent squash commits: headlines of what changed and why, no markdown headers/bullets/bold, no emoji or attribution footer, and no test counts or verification notes (CI on the merged commit is the record). Never GitHub's default commit-list body.
-6. **Report**: PR URL, feedback addressed vs. rejected, CI status, merge outcome, anything needing the user's judgment.
+**Constraint.** Use git for reads only (`fetch`, `status`, `log`); route every remote mutation through `gh`. If a step needs a push you can't make, report it and hand back — don't work around it.
+
+1. **Preflight.** `git fetch -v`, `git status`, `git log origin/main..HEAD`, `gh pr list --head <branch> --state all`. Stop and ask — never resolve unilaterally — on a dirty worktree, the default branch, divergence from remote (rebase/force-push is the user's call), or an existing merged/closed PR for this branch.
+
+2. **PR.** `gh pr create`, or reuse the branch's existing **open** PR (`--state open`). Report the URL.
+
+3. **Background reviews**, both launched now, parallel with step 4.
+   - Clean `/code-review` agent carrying none of this session's context; treat its findings as reviewer comments.
+   - Downstream sweep *only* if the repo documents external consumers **and** the diff breaks a published package's public surface — removal, rename, incompatible signature/type/schema, or documented behavior callers rely on. Additive, internal, or unreleased-flag changes don't qualify; unsure → ask. The agent greps consumer repos for the broken symbols (`gh search code --owner <org> "<symbol>"`, skip archived), folds confirmed impact into the PR body, and flags coordinated changes. Never edit consumer repos.
+
+4. **Watch.** Block on `gh pr checks --watch`; re-read `gh pr view --comments` between events. Stop only when the agents have returned **and** required checks completed **and** every comment is fixed or answered — green CI with zero comments means review hasn't run yet, not that you're done. Nothing ~15 min after CI settles → hand back. Fix only local, behavior-preserving feedback; anything touching design, public API, or intended behavior goes to the user first, even when the reviewer is right. Reply on the PR with reasoning when declining.
+
+5. **Merge (approval required).** Ask: merge now, stage `--auto`, or don't. Squash with `--subject "<PR title> (#<num>)"` and a body drafted for the user first. Write it for `git log`, not the PR page: slim prose in the style of the repo's recent squash commits, what changed and why. No headers, bullets, bold, emoji, attribution, or test counts. Never GitHub's default commit list.
+
+6. **Report.** URL, feedback addressed vs. declined, CI status, merge outcome, open judgment calls.
