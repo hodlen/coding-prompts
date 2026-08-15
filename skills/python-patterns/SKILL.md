@@ -27,7 +27,7 @@ description: Python-specific patterns and conventions. Assumes the general archi
 - Catch exceptions only with a concrete recovery path; otherwise let them propagate.
 - Avoid blanket handlers (`except Exception`) and silent fallbacks.
 - For in-process compute failures with a meaningful branch, encode the failure in the return shape (dataclass, `Enum`, or tagged union via `Literal` discriminators). Reserve exceptions for truly exceptional or cross-layer infrastructure paths; when re-raising, add context.
-- When a function has a meaningful degraded path (cache fallback, retry exhaustion, stale read), make it visible in the return shape — not hidden behind a success-looking return with side-channel signaling.
+- When a function has a meaningful degraded path (cache fallback, retry exhaustion, stale read), make it visible in the return shape, not hidden behind a success-looking return with side-channel signaling.
 
 ## Dependency and Resource Management
 
@@ -44,9 +44,9 @@ description: Python-specific patterns and conventions. Assumes the general archi
 
 The general "no comments unless the WHY is non-obvious" rule applies. Python-specific corollaries:
 
-- **Decision rule.** Delete the docstring mentally. If the reader only loses information already in the name and types, delete it for real. If the reader loses a constraint the caller must know, keep it — and rewrite it so it says *just that constraint*.
+- **Decision rule.** Delete the docstring mentally. If the reader only loses information already in the name and types, delete it for real. If the reader loses a constraint the caller must know, keep it, and rewrite it so it says *just that constraint*.
 - **Default by visibility.** Public, non-trivial functions may need a one-line semantic summary, plus a short body only when there is a real contract such as PIT semantics, idempotency, atomicity, ordering, caller invariants, version-specific workarounds, or failure modes the type does not imply. Private and trivial functions usually need no docstring.
-- **Prefer prose-with-WHY over Google-style blocks.** Reach for `Args:`/`Returns:`/`Yields:`/`Raises:` only when the type/name can't express the constraint — and write *just that constraint*, not a paraphrase of the parameter name. `Examples:` only when the usage pattern is non-obvious.
+- **Prefer prose-with-WHY over Google-style blocks.** Reach for `Args:`/`Returns:`/`Yields:`/`Raises:` only when the type/name can't express the constraint, and write *just that constraint*, not a paraphrase of the parameter name. `Examples:` only when the usage pattern is non-obvious.
 - **Dataclass/Pydantic field docs** follow the same rule: drop `key: Document key within the topic`; keep `must be timezone-aware`.
 - **Delete on sight:** `Args:` blocks that restate the param name, `Returns:` blocks that restate the type, class docstrings paraphrasing the class name (`"""User class."""`), and comments narrating the next line (`# increment counter`).
-- **Inline comments** follow the same WHY-only rule, more strictly. Reserve them for library footguns (`# argMax skips NULLs silently`), invariants being relied on, or workarounds whose reason isn't visible. Never write changelog comments (`# replaced by X`) — git history is the changelog.
+- **Inline comments** follow the same WHY-only rule, more strictly. Reserve them for library footguns (`# argMax skips NULLs silently`), invariants being relied on, or workarounds whose reason isn't visible. Never write changelog comments (`# replaced by X`), because git history is the changelog.
