@@ -48,6 +48,8 @@ Default to the smallest clean change. Include a local refactor when it directly 
 
 Prefer explicit data flow, pure transformations, visible branching, and minimal shared mutation as a reasoning model. Do not impose functional syntax on a repository that uses another clear idiom.
 
+Deduplicate on the second real occurrence, not the first. Text similarity is not duplicated knowledge, and an anticipated call site is not a call site. A name you want to give a step is not, by itself, a reason to extract it.
+
 Follow existing syntax and conventions for `Result`/`Either`, tagged unions, immutable collections, classes, pipelines, and dependency injection. New modules may establish a cleaner pattern; in-place edits should normally extend the surrounding style.
 
 ### Compute and effects
