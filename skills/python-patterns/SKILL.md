@@ -17,6 +17,12 @@ description: Python-specific patterns and conventions. Assumes the general archi
 - Keep validators narrow: shape, basic constraints, normalization. Do not embed workflow logic or IO in validators.
 - Prefer explicit schema/versioning for externally consumed payloads (e.g., `v1`, `v2` modules or version fields).
 
+## Contract Discipline
+
+- When a type, schema, or merge/uniqueness validation fails, fix the data shape (aggregate first, extend the schema, narrow the input); do not loosen the declaration to `Any`, a bare `DataFrame`, an `Optional`, or a weaker validation level.
+- Keep signatures honest: every accepted parameter is used, and the return type carries the whole result.
+- Wire payloads are not for humans: no comments inside SQL strings.
+
 ## Pandas
 
 - In new code, avoid `if df.empty:` unless a downstream operation requires non-empty input (e.g., `.min()`, `.max()`, `.iloc[0]`, single-row indexing). Otherwise, normalize DataFrame columns and types up front and let the pipeline handle empty DataFrames unconditionally.
