@@ -1,6 +1,6 @@
 ---
 name: ship
-description: "Ship the current branch as a PR: preflight, create with gh, clean durable artifacts, run a focused /code-review, then watch comments and CI and iterate. Squash-merges only with explicit per-PR approval."
+description: "Ship the current branch as a PR: preflight, create with gh, run /cleanup, run a focused /code-review, then watch comments and CI and iterate. Squash-merges only with explicit per-PR approval."
 ---
 
 # Ship
@@ -15,8 +15,7 @@ GitHub renders bodies and comments as markdown, so keep each paragraph on one li
 
 2. **PR.** `gh pr create`, or reuse the branch's existing **open** PR (`--state open`). Report the URL.
 
-3. **Artifact cleanup.** Clean agent carrying none of this session's context edits durable artifacts without changing meaning. Report ambiguity instead of resolving it. Repeat after later artifact changes.
-   - The same agent then checks the diff against the request: restore touched files the request never needed (format-only churn included), delete unrequested features with their tests, inline single-caller helpers and single-use constants, drop guards for states the types already exclude, verify claimed deletions by grep, and confirm GitHub bodies carry no mid-paragraph hard wraps. It applies the mechanical fixes and reports judgment calls.
+3. **Cleanup.** Run `/cleanup` on the branch diff. Repeat its artifact pass after later artifact changes.
 
 4. **Background review**, launched after cleanup, parallel with step 5.
    - Clean `/code-review` agent carrying none of this session's context reports only material correctness, contract, test, compatibility, or misleading-artifact defects. Treat its findings as reviewer comments.

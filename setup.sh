@@ -31,6 +31,30 @@ merge_claude_deny_rules() {
   mv "$settings_tmp" "$settings_path"
 }
 
+# Same hook schema on both sides: Claude Code reads hooks from settings.json,
+# Codex from hooks.json. Dedup by command path so re-runs are no-ops.
+merge_stop_hook() {
+  local path="$1"
+  local cmd="$SCRIPT_DIR/hooks/cleanup-gate.sh"
+  local tmp
+
+  command -v jq >/dev/null || {
+    echo "jq is required to merge Stop hooks." >&2
+    return 1
+  }
+
+  [[ -f "$path" ]] || echo '{}' > "$path"
+  tmp="$(mktemp "${path}.XXXXXX")"
+  jq --arg cmd "$cmd" '
+    .hooks = (.hooks // {})
+    | .hooks.Stop = (.hooks.Stop // [])
+    | if ([.hooks.Stop[].hooks[]?.command] | index($cmd)) then .
+      else .hooks.Stop += [{matcher: "", hooks: [{type: "command", command: $cmd, timeout: 10}]}]
+      end
+  ' "$path" > "$tmp"
+  mv "$tmp" "$path"
+}
+
 mkdir -p \
   "$HOME/.claude/skills" \
   "$HOME/.claude/commands" \
@@ -42,6 +66,8 @@ ln -sfn "$SCRIPT_DIR/AGENTS.md" "$HOME/.codex/AGENTS.md"
 ln -sfn "$SCRIPT_DIR/settings/codex-deny.rules" "$HOME/.codex/rules/coding-prompts.rules"
 
 merge_claude_deny_rules
+merge_stop_hook "$HOME/.claude/settings.json"
+merge_stop_hook "$HOME/.codex/hooks.json"
 
 # Per-item symlinks so ~/.claude/{skills,commands} and ~/.agents/skills can
 # co-host third-party tools (e.g. gstack) without polluting this repo.
@@ -55,4 +81,14 @@ for src in "$SCRIPT_DIR"/commands/*; do
   [ -e "$src" ] || continue
   name="$(basename "$src")"
   ln -sfn "$src" "$HOME/.claude/commands/$name"
+done
+
+# Claude Code ships /simplify and /code-review as built-ins (in-binary, no
+# files to link). Codex has neither, so link portable snapshots into
+# ~/.codex/skills only: ~/.agents/skills would shadow the richer built-ins,
+# because Claude Code reads that directory too.
+mkdir -p "$HOME/.codex/skills"
+for src in "$SCRIPT_DIR"/skills/.portable/*/; do
+  name="$(basename "$src")"
+  [ -e "$HOME/.codex/skills/$name" ] || ln -sfn "$src" "$HOME/.codex/skills/$name"
 done
