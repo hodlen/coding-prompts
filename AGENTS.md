@@ -56,7 +56,7 @@ Before writing a mechanism, check that it does not already exist: a sibling modu
 
 Prefer explicit data flow, pure transformations, visible branching, and minimal shared mutation as a reasoning model. Do not impose functional syntax on a repository that uses another clear idiom.
 
-Deduplicate on the second real occurrence, not the first. Text similarity is not duplicated knowledge, and an anticipated call site is not a call site. A name you want to give a step is not, by itself, a reason to extract it.
+Duplicate knowledge may remain in two real places; extract only when a third real occurrence or call site exists. Text similarity and anticipated call sites do not count. Keep one-off and twice-used logic at its use sites; a nameable step alone does not justify a helper or proliferating file/module-level private globals, instances, constants, and functions.
 
 Follow existing syntax and conventions for `Result`/`Either`, tagged unions, immutable collections, classes, pipelines, and dependency injection. New modules may establish a cleaner pattern; in-place edits should normally extend the surrounding style.
 

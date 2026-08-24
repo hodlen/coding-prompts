@@ -43,6 +43,7 @@ description: Python-specific patterns and conventions. Assumes the general archi
 ## Structure and Imports
 
 - Organize code by domain; keep framework, router, and transport layers thin.
+- When a helper serves one enclosing operation, prefer a nested function or closure to a module-level underscore helper. Use module scope when reuse, independent testing, lifecycle, import boundaries, or clarity justify it.
 - Avoid re-exporting from `__init__.py` unless it materially improves the public module boundary.
 - Do not use `utils/` as a catch-all. Create small, named modules with clear responsibility.
 
