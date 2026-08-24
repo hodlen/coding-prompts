@@ -50,7 +50,7 @@ Frame non-trivial work around four questions:
 
 Default to the smallest clean change. Include a local refactor when it directly protects correctness, boundary integrity, or change safety. Escalate to architecture only when requested or when every credible local fix would entrench a serious design flaw.
 
-Before writing a mechanism, check that it does not already exist: a sibling module in the same package, the repository's shared layer, the standard library or installed frameworks. For solved domains such as migrations, scheduling, serialization, and calendar arithmetic, use the established tool; hand-rolling a replacement requires the user's agreement. Fix a bug in the layer that owns the broken invariant, not at the call site where the symptom appeared.
+Before designing or implementing a new module or mechanism, look for the closest existing analogue and inspect its contracts, boundaries, and repository conventions. Also check whether the mechanism already exists in a sibling module, the shared layer, the standard library, or an installed framework. For solved domains such as migrations, scheduling, serialization, and calendar arithmetic, use the established tool; hand-rolling a replacement requires the user's agreement. Fix a bug in the layer that owns the broken invariant, not at the call site where the symptom appeared.
 
 ### Functional thought, repository-respecting style
 

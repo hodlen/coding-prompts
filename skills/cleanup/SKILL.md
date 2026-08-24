@@ -5,7 +5,7 @@ description: "Pre-merge and mid-work guardrail: a clean agent checks the diff ag
 
 # Cleanup
 
-Use a supplied target; otherwise start at the latest `cleanup-reviewed-through: <short SHA>` in this task, promoting through later commits only when they contain only accepted dirty changes. Fall back to the remote-default fork point (`git merge-base --fork-point`, then `git merge-base`). Review commits plus staged, unstaged, and untracked changes; never persist checkpoints.
+Use a supplied target. Otherwise compare the pushed frontier (the current branch's upstream tip, or the corresponding remote-tracking tip in a detached worktree) with the latest valid `cleanup-reviewed-through: <short SHA>` in this task and use the newer applicable commit. Treat pushed commits as stable. If neither exists, fall back to the remote-default fork point (`git merge-base --fork-point`, then `git merge-base`) as a last resort. Review the frontier-to-worktree diff, including unpushed commits and staged, unstaged, and untracked changes; never persist checkpoints.
 
 Passes A and C use a clean agent given only the diff, original request verbatim, plan file, and explicit constraints. Never inject prior agent output.
 
