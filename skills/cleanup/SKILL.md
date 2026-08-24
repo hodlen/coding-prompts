@@ -9,7 +9,7 @@ Use a supplied target; otherwise start at the latest `cleanup-reviewed-through: 
 
 Passes A and C use a clean agent given only the diff, original request verbatim, plan file, and explicit constraints. Never inject prior agent output.
 
-**A. Scope and constraints.** Check the diff against the request and every explicit constraint. Restore unnecessary touched files including formatting churn; remove unrequested features and tests or impossible-state guards; verify deletions by grep and GitHub bodies for mid-paragraph hard wraps. Apply mechanical fixes; report judgment calls.
+**A. Scope and constraints.** Check the diff against the request and every explicit constraint. Audit changed tests against `Tests as contracts`: remove tautologies and mirrors, mock only IO seams, and mutation-check each design decision. Restore unnecessary touched files including formatting churn; remove unrequested features and tests or impossible-state guards; verify deletions by grep and GitHub bodies for mid-paragraph hard wraps. Apply mechanical fixes; report judgment calls.
 
 **B. `/simplify`** on the same target; its review agents are already context-free.
 
