@@ -19,6 +19,8 @@ base=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || 
 fork=$(git merge-base --fork-point "$base" HEAD 2>/dev/null ||
   git merge-base "$base" HEAD 2>/dev/null) || exit 0
 head=$(git rev-parse HEAD)
+fork_label=$(git rev-parse --short "$fork")
+head_label=$(git rev-parse --short "$head")
 lines=$(git diff --numstat "$fork" -- 2>/dev/null |
   awk '$1 != "-" {s+=$1} $2 != "-" {s+=$2} END {print s+0}')
 (( lines >= THRESHOLD_LINES )) || exit 0
@@ -29,5 +31,5 @@ untracked=$(git ls-files --others --exclude-standard | awk 'END {print NR+0}')
 
 echo "$now" > "$mark"
 cat <<EOF
-{"decision": "block", "reason": "Cleanup candidate: $fork..$head has $commits commits/$lines lines; dirty files $staged staged/$unstaged unstaged/$untracked untracked. Start at the latest valid cleanup-reviewed-through in this task, else $fork; skip only if it reaches $head and dirty counts are zero."}
+{"decision": "block", "reason": "Cleanup candidate: $fork_label..$head_label has $commits commits/$lines lines; dirty files $staged staged/$unstaged unstaged/$untracked untracked. Use this task's latest cleanup result, promote commits containing only its accepted dirty work, else start at $fork_label. Review what remains or skip when covered."}
 EOF
