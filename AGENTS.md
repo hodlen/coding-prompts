@@ -117,7 +117,7 @@ When they affect results, make these explicit in code and tests:
 
 ### Self-explanatory code
 
-Let names, signatures, types, and structure carry intent. Comments and docstrings should preserve information the code cannot express: non-obvious constraints, tradeoffs, invariants, domain reasoning, or library footguns. Do not narrate the next line, record changelog history, or leave debug breadcrumbs in comments; use version history and structured logging for those purposes.
+Let signatures, types, and structure carry intent. Name entities by domain role and operations by domain action or state transition. Generic mechanism names that obscure the affected domain concept are an anti-pattern unless the generic term belongs to established domain language. Comments and docstrings should preserve information the code cannot express: non-obvious constraints, tradeoffs, invariants, domain reasoning, or library footguns. Do not narrate the next line, record changelog history, or leave debug breadcrumbs in comments; use version history and structured logging for those purposes.
 
 ## Durable artifacts
 
