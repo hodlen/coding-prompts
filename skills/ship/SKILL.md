@@ -9,6 +9,8 @@ Authorizes creating the PR and working on follow-up fixes. Merging needs separat
 
 **Artifacts.** Write PR titles and bodies, review replies, merge messages, comments, docstrings, and documentation for readers without session context. Living artifacts state durable mechanisms, invariants, constraints, or tradeoffs; point-in-time evidence belongs in PR or commit prose. Every referent resolves from the repository, issue, or PR. Do not use session labels, unstored decisions, reassurance about non-changes, debate residue, or em dashes. Recheck artifacts against the final diff before merge.
 
+Clean agents edit and verify explicitly assigned, non-overlapping local artifacts and behavior-preserving fixes directly without session rationale. The main agent handles conflicts, genuine ambiguity, design or public API decisions, and external publishing; it does not reimplement accepted changes.
+
 GitHub renders bodies and comments as markdown, so keep each paragraph on one line and hard-wrap only inside fenced blocks and tables.
 
 1. **Preflight.** `git status`, `git log origin/main..HEAD`, `gh pr list --head <branch> --state all`. Stop and ask (never resolve unilaterally) on a pre-existing dirty worktree, the default branch, divergence from remote (rebase/force-push is the user's call), or an existing merged/closed PR for this branch.

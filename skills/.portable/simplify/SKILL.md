@@ -11,7 +11,7 @@ Target: the argument if given, else `git diff @{upstream}...HEAD` plus `git diff
 
 ## Phase 1: Review (4 angles)
 
-If a subagent tool is available, launch 4 independent review agents in parallel, each given the diff and one angle below; otherwise work through all four angles yourself in one pass, and do not skip an angle. Each finding carries `file`, `line`, a one-line summary, and the concrete cost (what is duplicated, wasted, or harder to maintain).
+If a subagent tool is available, launch 4 independent review agents in parallel, each given only the diff and one angle below, never session history, implementation rationale, or prior agent output; otherwise work through all four angles yourself in one pass, and do not skip an angle. Each finding carries `file`, `line`, a one-line summary, and the concrete cost (what is duplicated, wasted, or harder to maintain).
 
 ### Reuse
 
@@ -31,4 +31,4 @@ Check that each change is implemented at the right depth, not as a fragile banda
 
 ## Phase 2: Apply the fixes
 
-Dedup findings that point at the same line or mechanism, then fix each remaining one directly. Skip any finding whose fix would change intended behavior, require changes well outside the reviewed diff, or that you judge a false positive; note the skip rather than arguing with it. Finish with a brief summary of what was fixed and what was skipped (or confirm the code was already clean).
+Dedup findings that point at the same line or mechanism. Assign each independent, behavior-preserving fix an explicit non-overlapping file or mechanism scope; a clean agent edits and verifies that scope directly without session rationale. The main agent handles only overlapping, cross-cutting, or behavior-sensitive findings and rechecks the combined diff without reimplementing accepted changes. Skip any finding whose fix would change intended behavior, require changes well outside the reviewed diff, or that you judge a false positive; note the skip rather than arguing with it. Finish with a brief summary of what was fixed and what was skipped (or confirm the code was already clean).

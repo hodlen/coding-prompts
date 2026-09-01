@@ -7,7 +7,7 @@ description: "Pre-merge and mid-work guardrail: a clean agent checks the diff ag
 
 Use a supplied target. Otherwise compare the pushed frontier (the current branch's upstream tip, or the corresponding remote-tracking tip in a detached worktree) with the latest valid `cleanup-reviewed-through: <short SHA>` in this task and use the newer applicable commit. Treat pushed commits as stable. If neither exists, fall back to the remote-default fork point (`git merge-base --fork-point`, then `git merge-base`) as a last resort. Review the frontier-to-worktree diff, including unpushed commits and staged, unstaged, and untracked changes; never persist checkpoints.
 
-Passes A and C use a clean agent given only the diff, original request verbatim, plan file, and explicit constraints. Never inject prior agent output.
+Pass A uses a clean agent given only the diff, original request verbatim, plan file, and explicit constraints. Pass C uses a fresh clean agent given only the final diff, changed artifacts, and repository-visible references. Never inject prior agent output or session rationale. Clean agents edit and verify explicitly assigned, non-overlapping local scopes directly; return only conflicts or genuine ambiguity to the main agent.
 
 **A. Scope and constraints.** Check the diff against the request and every explicit constraint. Audit changed tests against `Tests as contracts`: remove tautologies and mirrors, mock only IO seams, and mutation-check each design decision. Restore unnecessary touched files including formatting churn; remove unrequested features and tests or impossible-state guards; verify deletions by grep and GitHub bodies for mid-paragraph hard wraps. Apply mechanical fixes; report judgment calls.
 
