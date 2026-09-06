@@ -17,7 +17,7 @@ Report material defects, excluding style preferences. Target resolution as in `/
 
 ## Phase 2: Verify
 
-Deduplicate defects, then adversarially verify each in a separate subagent when available, or re-derive it from code. Classify as CONFIRMED, PLAUSIBLE, or REFUTED; drop REFUTED.
+Deduplicate defects by mechanism, then use one fresh verifier for the remaining candidates. Split substantial, independently reviewable scopes when useful; without agents, re-derive each candidate from code. Verify adversarially and classify as CONFIRMED, PLAUSIBLE, or REFUTED; drop REFUTED.
 
 ## Phase 3: Report
 

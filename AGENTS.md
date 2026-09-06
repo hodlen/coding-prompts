@@ -80,9 +80,9 @@ For non-trivial changes, draft behavioral tests before implementation; resolve a
 
 Mock IO seams, not compute under test. Interaction assertions are valid when the call is the contract. Use unit tests for transformations and controlled integration tests for flows; live systems require authorization from the request and environment. Test owned behavior and assume dependencies' guarantees.
 
-Mutation-check completed decisions and their tests: flip a condition, move a boundary, remove a decision-bearing branch, and try harmless edits. Use fresh context and an isolated agent when available, supplying the contract, code, and tests. Report undetected breaks and removable tests; retain the smallest suite that detects real decisions and survives harmless edits.
+Mutation-check completed decisions and their tests: flip a condition, move a boundary, remove a decision-bearing branch, and try harmless edits. Use fresh context and an isolated agent when available, supplying the contract, code, and tests. An independent reviewer already assigned that scope can perform the check. Report undetected breaks and removable tests; retain the smallest suite that detects real decisions and survives harmless edits.
 
-Reuse task-local mutation evidence for unchanged contracts, implementations, and tests across implementation, cleanup, and shipping. Recheck affected decisions after relevant changes, or when prior coverage or freshness cannot be established. Select the uncovered scope before delegating; keep the new review independent of earlier findings.
+Keep mutation evidence in the task: checked decisions, relevant code and test state, mutations tried, and outcomes. The main agent reuses evidence for unchanged contracts, implementations, and tests across implementation, cleanup, and shipping, selecting only affected or uncovered decisions for rechecking. Uncertain coverage or freshness requires rechecking. Pass that scope to the reviewer without earlier findings; an empty scope needs no mutation pass.
 
 Add a regression test for contract-breaking bugs when an executable boundary exists. For prompts, documentation, missing harnesses, or one-off scripts, explain why meaningful automated testing does not apply and report alternative verification.
 

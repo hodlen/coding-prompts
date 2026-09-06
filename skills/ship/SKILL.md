@@ -17,14 +17,13 @@ Keep GitHub paragraphs on one line; hard-wrap only fenced blocks and tables.
 
 2. **PR.** `gh pr create`, or reuse the branch's existing **open** PR (`--state open`). Report the URL.
 
-3. **Cleanup.** Run `/cleanup` on the branch diff. Repeat its artifact pass after later artifact changes.
+3. **Cleanup.** Run `/cleanup` on the branch diff unless an earlier cleanup at completion covers its current scope and state. Repeat its artifact pass after later artifact changes.
 
 4. **Background review**, launched after cleanup, parallel with step 5.
-   - Run `/code-review` in a clean agent given only the diff, explicit constraints, and completion stage. Treat its findings as reviewer comments.
-   - Ensure mutation evidence covers the final code and tests under `Tests as contracts`. Assign uncovered decisions to a fresh reviewer with that policy; report coverage defects rather than test style preferences.
+   - The main agent selects the remaining mutation scope under `Tests as contracts`. Give one clean `/code-review` agent that policy and scope, the diff, explicit constraints, and completion stage. It reviews the full diff and checks the assigned decisions. Treat its findings as reviewer comments.
    - Sweep downstream only when the repository documents external consumers and the diff breaks a published package's public surface by removal, rename, incompatible signature/type/schema, or changed documented behavior. Exclude additive, internal, and unreleased-flag changes; ask if eligibility is uncertain. Search broken symbols in non-archived consumer repos (`gh search code --owner <org> "<symbol>"`), report confirmed impact in the PR body, and flag coordination needs. Do not edit consumer repos.
 
-5. **Watch.** Wait on `gh pr checks --watch`; re-read `gh pr view --comments` between events. Finish when agents have returned, required checks have completed, and every comment is fixed or answered. Green CI without review comments is not evidence of review; hand back after about 15 minutes without review activity once CI settles. Fix local, behavior-preserving feedback; take design, public API, or behavior changes to the user first. Explain declined feedback on the PR. Wait on CI only for work at the PR head.
+5. **Watch.** Wait on `gh pr checks --watch`; re-read `gh pr view --comments` between events. Finish when agents have returned, required checks have completed, and every comment is fixed or answered. Green CI without review comments is not evidence of review; hand back after about 15 minutes without review activity once CI settles. Fix local, behavior-preserving feedback; take design, public API, or behavior changes to the user first. Recheck decisions affected by later fixes under `Tests as contracts`. Explain declined feedback on the PR. Wait on CI only for work at the PR head.
 
 6. **Merge (approval required).** Never merge while fixes sit uncommitted or unpushed; surface them instead. Otherwise ask: merge now, stage `--auto`, or don't. Squash with `--subject "<PR title> (#<num>)"` and a body drafted for the user first. Write it for `git log`, not the PR page: slim prose in the style of the repo's recent squash commits, what changed and why. No headers, bullets, bold, emoji, attribution, or test counts.
 
