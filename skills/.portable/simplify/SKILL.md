@@ -1,34 +1,34 @@
 ---
 name: simplify
-description: "Clean up the changed code without changing behavior: review the diff for reuse, simplification, efficiency, and altitude issues, then apply the fixes. Quality only, not bug hunting. Portable snapshot of Claude Code's built-in /simplify for hosts without it."
+description: "Improve changed code through reuse, simplification, efficiency, and ownership review, then apply behavior-preserving fixes."
 ---
 
 # Simplify
 
-You are improving the quality of the changed code, not hunting for bugs (that is code review's job).
+Review quality; material defects belong to `/code-review`.
 
 Target: the argument if given, else `git diff @{upstream}...HEAD` plus `git diff HEAD` to cover committed and uncommitted changes, falling back to `git diff main...HEAD`.
 
 ## Phase 1: Review (4 angles)
 
-If a subagent tool is available, launch 4 independent review agents in parallel, each given only the diff and one angle below, never session history, implementation rationale, or prior agent output; otherwise work through all four angles yourself in one pass, and do not skip an angle. Each finding carries `file`, `line`, a one-line summary, and the concrete cost (what is duplicated, wasted, or harder to maintain).
+Use one fresh reviewer covering all four angles by default. Split substantial, independently reviewable scopes or angles across agents when useful; without agents, cover all four yourself. Give reviewers only the diff, assigned scope and angles, explicit constraints, and authorized implementation stage. Exclude session history, rationale, and prior agent output. Each finding names the file, line, issue, concrete cost, and existing or simpler alternative.
 
 ### Reuse
 
-Flag new code that re-implements something the codebase already has: grep shared/utility modules and files adjacent to the change, and name the existing helper to call instead.
+Find reimplemented behavior in adjacent and shared modules; identify the existing implementation to reuse.
 
 ### Simplification
 
-Flag unnecessary complexity the diff adds: redundant or derivable state, copy-paste with slight variation, deep nesting, dead code left behind. Name the simpler form that does the same job.
+Find redundant or derivable state, duplicated logic, deep nesting, and dead code.
 
 ### Efficiency
 
-Flag wasted work the diff introduces: redundant computation or repeated I/O, independent operations run sequentially, blocking work added to startup or hot paths, and long-lived objects built from closures that keep the whole enclosing scope alive. Name the cheaper alternative.
+Find repeated computation or IO, sequential independent operations, blocking startup or hot-path work, and closures retaining unnecessary long-lived state.
 
 ### Altitude
 
-Check that each change is implemented at the right depth, not as a fragile bandaid. Special cases layered on shared infrastructure are a sign the fix isn't deep enough; prefer generalizing the underlying mechanism over adding special cases.
+Find special cases whose invariant belongs in a shared mechanism; keep the fix at its owning boundary.
 
 ## Phase 2: Apply the fixes
 
-Dedup findings that point at the same line or mechanism. Assign each independent, behavior-preserving fix an explicit non-overlapping file or mechanism scope; a clean agent edits and verifies that scope directly without session rationale. The main agent handles only overlapping, cross-cutting, or behavior-sensitive findings and rechecks the combined diff without reimplementing accepted changes. Skip any finding whose fix would change intended behavior, require changes well outside the reviewed diff, or that you judge a false positive; note the skip rather than arguing with it. Finish with a brief summary of what was fixed and what was skipped (or confirm the code was already clean).
+Deduplicate findings by mechanism. Assign independent fixes to clean agents with non-overlapping scopes; they edit and verify directly. The main agent handles overlaps and cross-cutting decisions, then checks the combined diff without reimplementing accepted fixes. Preserve intentional stubs and review pauses at the authorized stage. Skip false positives and fixes that change behavior or exceed scope. Report fixes and skips briefly.

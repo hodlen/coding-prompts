@@ -2,8 +2,8 @@
 # Periodically ask the agent to consider cleanup for a large branch diff.
 set -euo pipefail
 
-THRESHOLD_LINES=${CLEANUP_GATE_LINES:-200}
-INTERVAL_SECS=${CLEANUP_GATE_SECS:-1800}
+THRESHOLD_LINES=${CLEANUP_GATE_LINES:-400}
+INTERVAL_SECS=${CLEANUP_GATE_SECS:-3600}
 
 input=$(cat)
 if [[ "$input" == *'"stop_hook_active":true'* ]]; then exit 0; fi
@@ -31,5 +31,5 @@ untracked=$(git ls-files --others --exclude-standard | awk 'END {print NR+0}')
 
 echo "$now" > "$mark"
 cat <<EOF
-{"decision": "block", "reason": "Cleanup candidate: $fork_label..$head_label has $commits commits/$lines lines; dirty files $staged staged/$unstaged unstaged/$untracked untracked. Use this task's latest cleanup result, promote commits containing only its accepted dirty work, else start at $fork_label. Review what remains or skip when covered."}
+{"decision": "block", "reason": "Cleanup candidate: $fork_label..$head_label has $commits commits/$lines lines; dirty files $staged staged/$unstaged unstaged/$untracked untracked. Use /cleanup to select and review the remaining scope; skip when already covered. Respect pending implementation reviews."}
 EOF
