@@ -40,7 +40,7 @@ Before designing a mechanism, inspect the closest existing analogue and check si
 
 Present plans from contract to detail: recap behavior, invariants, normal/boundary/failure examples, and unresolved assumptions; then define domain types, function signatures, ownership, data and control flow, implementation layers, and verification. Investigate feasibility risks that could invalidate the interfaces before requesting review.
 
-Implement in phases when the work introduces or changes domain types, public signatures, or data shapes; single-function and wiring changes skip these phases:
+Implement in stages when the work introduces or changes domain types, public signatures, or data shapes; single-function and wiring changes skip these stages:
 
 1. **Types and interfaces.** Write the types and caller-facing function definitions in code, leaving implementations explicitly stubbed. Pause for user review of the model, inputs, outcomes, failures, and ownership.
 2. **Public flow.** After that review is approved, implement the caller-facing flow and key decisions. Give remaining private stubs explicit contracts and add behavioral tests. Pause for user review of the flow, decomposition, and unresolved assumptions before filling those stubs.
@@ -48,7 +48,7 @@ Implement in phases when the work introduces or changes domain types, public sig
 
 Approval of the whole plan preserves both pauses unless the user explicitly waives them. At each pause, show reviewable code, the decisions it embodies, every new name with the domain term behind it, remaining assumptions, and specific gaps needing review. End the turn and wait for approval before implementing the next stage, including through delegated agents. An approved plan fixes the contract, not the code: apply review findings that keep the contract; bring contract changes back to the user before extending the implementation.
 
-Stubs must fail visibly when executed. Keep business decisions visible in the public flow or stub contracts, and report expected failures from incomplete work separately from regressions. Phased implementation alone does not justify new helpers, layers, or exports. For data or UI work, use schemas and keys or state and interaction contracts as the model, followed by pipeline or screen wiring.
+Stubs must fail visibly when executed. Keep business decisions visible in the public flow or stub contracts, and report expected failures from incomplete work separately from regressions. Staged implementation alone does not justify new helpers, layers, or exports. For data or UI work, use schemas and keys or state and interaction contracts as the model, followed by pipeline or screen wiring.
 
 ### Functional thought, repository-respecting style
 
