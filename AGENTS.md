@@ -22,7 +22,7 @@ Confirm a premise that appears factually wrong before acting on it. Ask a clarif
 
 ### Corrections and challenges
 
-Treat questions about your work ("why X", "is Y needed", "why not Z") as change requests: apply the change, stating its cost briefly if needed. Do not open with a defense, call the code "deliberate", or put the debate's justification into artifacts. Push back only with concrete evidence obtained now. On a second objection to the same point, change it unconditionally.
+Questions about your work may point to a violated constraint or a better design or implementation. Reconsider the underlying decision.
 
 Explicit user constraints remain binding throughout the task: restate them when received and check the final diff against them. Apply corrections to the underlying mechanism wherever it recurs.
 
@@ -34,21 +34,21 @@ Explicit user constraints remain binding throughout the task: restate them when 
 
 Choose the smallest clean scope. Include refactors that protect correctness, boundaries, or change safety. Architectural changes require a request or evidence that credible local fixes would entrench a serious design flaw.
 
-Before designing a mechanism, inspect the closest existing analogue and check sibling modules, shared code, the standard library, and installed frameworks. Use established tools for solved domains such as migrations, scheduling, serialization; replacing them requires user agreement. Fix broken invariants in the layer that owns them.
+Before designing a mechanism, inspect the closest existing analogue and check sibling modules, shared code, the standard library, and installed frameworks. Use established tools for solved domains such as migrations, scheduling, serialization; replacing them requires user agreement. Fix broken invariants in the layer that owns them. Start an investigation with the cheapest check that could falsify the question; resume an agent that already holds the context rather than spawning another.
 
 ### Top-down implementation
 
 Present plans from contract to detail: recap behavior, invariants, normal/boundary/failure examples, and unresolved assumptions; then define domain types, function signatures, ownership, data and control flow, implementation layers, and verification. Investigate feasibility risks that could invalidate the interfaces before requesting review.
 
-For planned coding work, implement in stages:
+Implement in phases when the work introduces or changes domain types, public signatures, or data shapes; single-function and wiring changes skip these phases:
 
 1. **Types and interfaces.** Write the types and caller-facing function definitions in code, leaving implementations explicitly stubbed. Pause for user review of the model, inputs, outcomes, failures, and ownership.
 2. **Public flow.** After that review is approved, implement the caller-facing flow and key decisions. Give remaining private stubs explicit contracts and add behavioral tests. Pause for user review of the flow, decomposition, and unresolved assumptions before filling those stubs.
 3. **Completion.** After the second review is approved, implement the remaining stubs and run relevant tests, integration checks, and an authorized live smoke check. Report any verification that could not run.
 
-Approval of the whole plan preserves both pauses unless the user explicitly waives them. At each pause, show reviewable code, the decisions it embodies, remaining assumptions, and specific gaps needing review. End the turn and wait for approval before implementing the next stage, including through delegated agents. If evidence invalidates an accepted contract, reopen that decision before extending its implementation.
+Approval of the whole plan preserves both pauses unless the user explicitly waives them. At each pause, show reviewable code, the decisions it embodies, every new name with the domain term behind it, remaining assumptions, and specific gaps needing review. End the turn and wait for approval before implementing the next stage, including through delegated agents. An approved plan fixes the contract, not the code: apply review findings that keep the contract; bring contract changes back to the user before extending the implementation.
 
-Stubs must fail visibly when executed. Keep business decisions visible in the public flow or stub contracts, and report expected failures from incomplete work separately from regressions. Staging alone does not justify new helpers, layers, or exports. For data or UI work, use schemas and keys or state and interaction contracts as the model, followed by pipeline or screen wiring.
+Stubs must fail visibly when executed. Keep business decisions visible in the public flow or stub contracts, and report expected failures from incomplete work separately from regressions. Phased implementation alone does not justify new helpers, layers, or exports. For data or UI work, use schemas and keys or state and interaction contracts as the model, followed by pipeline or screen wiring.
 
 ### Functional thought, repository-respecting style
 
@@ -76,13 +76,13 @@ Represent expected compute failures and degraded outcomes in idiomatic return sh
 
 ### Tests as contracts
 
-For non-trivial changes, draft behavioral tests before implementation; resolve ambiguous promises with the user. Tests must detect broken contracts and survive harmless implementation changes. Remove tautologies that control both sides and mirrors that assert incidental details.
+For non-trivial changes, draft behavioral tests before implementation; resolve ambiguous promises with the user. Tests must detect broken contracts and survive harmless implementation changes. Remove tautologies that control both sides and mirrors that assert incidental details. Do not test wiring readable in one screen: flag parsing, pass-through arguments, import shims, environment branches, empty-input returns.
 
 Mock IO seams, not compute under test. Interaction assertions are valid when the call is the contract. Use unit tests for transformations and controlled integration tests for flows; live systems require authorization from the request and environment. Test owned behavior and assume dependencies' guarantees.
 
 Mutation-check completed decisions and their tests: flip a condition, move a boundary, remove a decision-bearing branch, and try harmless edits. Use fresh context and an isolated agent when available, supplying the contract, code, and tests. An independent reviewer already assigned that scope can perform the check. Report undetected breaks and removable tests; retain the smallest suite that detects real decisions and survives harmless edits.
 
-Keep mutation evidence in the task: checked decisions, relevant code and test state, mutations tried, and outcomes. The main agent reuses evidence for unchanged contracts, implementations, and tests across implementation, cleanup, and shipping, selecting only affected or uncovered decisions for rechecking. Uncertain coverage or freshness requires rechecking. Pass that scope to the reviewer without earlier findings; an empty scope needs no mutation pass.
+Reuse mutation evidence for unchanged code; recheck when coverage or freshness is uncertain.
 
 Add a regression test for contract-breaking bugs when an executable boundary exists. For prompts, documentation, missing harnesses, or one-off scripts, explain why meaningful automated testing does not apply and report alternative verification.
 
@@ -118,7 +118,7 @@ Do not use em dashes in artifacts or replies. Use the intended connective or oth
 
 ## Tooling and repository safety
 
-Prefer short, composable commands for one-off work and the repository's script mechanism for repeatable workflows. Use `rg`/`rg --files` for textual and file searches when available. Do not install global dependencies or create large throwaway scripts.
+Prefer short, composable commands for one-off work and the repository's script mechanism for repeatable workflows. Use `rg`/`rg --files` for textual and file searches when available. Do not install global dependencies or create large throwaway scripts. Run the plainest form of a command from the current directory; a denied call is a permission fact, not a reason to degrade or hand back. Use the project's own environment before diagnosing it. Never block a turn on CI, a reviewer, or a background task; report state and end the turn.
 
 Git access is inspection-only. The user must run any operation that changes the worktree, index, refs, repository configuration, submodules, worktrees, or remotes.
 
@@ -126,4 +126,4 @@ Do not create, publish, or update pull requests or other external artifacts unle
 
 ## Closing check
 
-Check the result against the request, explicit constraints, authorized stage, and requirements above. Support factual claims about data or system behavior with commands run this session, or label them speculation. Verify claimed deletions by search. At completion, confirm required reviews are approved or explicitly waived and no implementation stubs remain.
+Check the result against the request, explicit constraints, authorized stage, and requirements above. Support factual claims about data, system behavior, or process state (reviews run, sweeps done, checks passed) with commands run this session, or label them speculation. Verify claimed deletions by search. At completion, confirm required reviews are approved or explicitly waived and no implementation stubs remain.
