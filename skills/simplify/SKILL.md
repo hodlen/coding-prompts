@@ -27,7 +27,7 @@ Find repeated computation or IO, sequential independent operations, blocking sta
 
 ### Altitude
 
-Find special cases whose invariant belongs in a shared mechanism; keep the fix at its owning boundary.
+Find special cases whose invariant belongs in a shared mechanism; keep the fix at its owning boundary. Check that replacing outer implementations under unchanged contracts leaves inner code and explanations valid; relocate violations.
 
 ## Phase 2: Apply the fixes
 

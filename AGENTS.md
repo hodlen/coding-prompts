@@ -36,35 +36,37 @@ Choose the smallest clean scope. Include refactors that protect correctness, bou
 
 Before designing a mechanism, inspect the closest existing analogue and check sibling modules, shared code, the standard library, and installed frameworks. Use established tools for solved domains such as migrations, scheduling, serialization; replacing them requires user agreement. Fix broken invariants in the layer that owns them. Start an investigation with the cheapest check that could falsify the question; resume an agent that already holds the context rather than spawning another.
 
-### Top-down implementation
+### Contract-first review, top-down refinement
 
-Present plans from contract to detail: recap behavior, invariants, normal/boundary/failure examples, and unresolved assumptions; then define domain types, function signatures, ownership, data and control flow, implementation layers, and verification. Investigate feasibility risks that could invalidate the interfaces before requesting review.
+Design from use cases: behavior, invariants, normal/boundary/failure examples, assumptions; then domain models, contracts, ownership, flow, and verification. Investigate interface feasibility before review.
 
-Implement in stages when the work introduces or changes domain types, public signatures, or data shapes; single-function and wiring changes skip these stages:
+Stage changes to domain types, public signatures, or data shapes; single-function and wiring changes skip staging:
 
-1. **Types and interfaces.** Write the types and caller-facing function definitions in code, leaving implementations explicitly stubbed. Pause for user review of the model, inputs, outcomes, failures, and ownership.
-2. **Public flow.** After that review is approved, implement the caller-facing flow and key decisions. Give remaining private stubs explicit contracts and add behavioral tests. Pause for user review of the flow, decomposition, and unresolved assumptions before filling those stubs.
-3. **Completion.** After the second review is approved, implement the remaining stubs and run relevant tests, integration checks, and an authorized live smoke check. Report any verification that could not run.
+1. **Models and contracts.** Encode domain meanings, valid states, and operation inputs/outcomes in types and signatures; define required capabilities and stub implementations. Pause for review of invariants, transitions, failures, and ownership.
+2. **Behavior and decomposition.** After approval, unfold use-case flows top down, keeping rules in domain logic. Stub straightforward details with explicit contracts at use sites or justified boundaries; follow the agreed design without prematurely extracting trivial helpers. Test implemented decisions, ordering, and failures with IO substitutes. Pause for review of behavior, decomposition, and assumptions.
+3. **Implementation and composition.** After the second approval, complete effects, wiring, and stubs. Refine decomposition from usage under the extraction and scope rules below. Run relevant tests, integration checks, and an authorized live smoke check; report unavailable verification.
 
-Approval of the whole plan preserves both pauses unless the user explicitly waives them. At each pause, show reviewable code, the decisions it embodies, every new name with the domain term behind it, remaining assumptions, and specific gaps needing review. End the turn and wait for approval before implementing the next stage, including through delegated agents. An approved plan fixes the contract, not the code: apply review findings that keep the contract; bring contract changes back to the user before extending the implementation.
+Plan approval preserves both pauses unless explicitly waived. At each pause, show code, decisions, each new name's domain meaning, assumptions, and review gaps. End the turn; await approval before any agent starts the next stage. Apply contract-preserving review findings; obtain approval for contract changes before extending implementation.
 
-Stubs must fail visibly when executed. Keep business decisions visible in the public flow or stub contracts, and report expected failures from incomplete work separately from regressions. Staged implementation alone does not justify new helpers, layers, or exports. For data or UI work, use schemas and keys or state and interaction contracts as the model, followed by pipeline or screen wiring.
+Stubs must fail visibly; report incomplete-work failures separately from regressions. Business decisions belong in domain rules or use-case flows, not adapter glue. Staging does not justify new helpers, layers, or exports. For data or UI work, model schemas and keys or state and interactions before pipeline or screen wiring.
 
 ### Functional thought, repository-respecting style
 
-Prefer explicit data flow, pure transformations, visible branching, and minimal shared mutation. Follow surrounding syntax and idioms in existing modules; new modules may establish a cleaner pattern. Organize modules by domain, keep framework and transport layers thin, and avoid catch-all utility modules.
+Default to functional domain modeling: domain types carry meaning and guarantees; functions transform domain values; workflows compose them. Prefer immutable values and explicit branching. Adapt syntax and representations to the repository. Organize by domain, not technical role; avoid catch-all utility modules.
 
-Extract shared logic only at the third real occurrence or call site. Keep one-off and twice-used logic at its use sites; text similarity, anticipated reuse, or a nameable step does not justify extraction.
+Extract shared logic only at the third real occurrence. A domain operation may stand alone for its contract; trivial details stay at use sites. Text similarity, anticipated reuse, or a nameable step does not justify helpers.
 
 Give helpers the narrowest practical scope; broader scope needs reuse, independent testing, lifecycle, import boundaries, or clarity to justify it.
 
-### Compute and effects
+### Domain ownership and dependencies
 
-Separate business decisions from IO: pure compute receives explicit inputs and returns values; the edge owns persistence, network calls, logging, framework glue, clocks, randomness, and clients. Prefer functions and explicit factories for dependencies. Inject dependencies and construct shared resources at the composition boundary, with explicit lifetime and cleanup. Trivial IO glue needs no artificial compute layer.
+Inner consumers own capability contracts; execution mechanisms satisfy them. Source dependencies follow semantic ownership inward, independently of runtime calls. Replacing outer implementations under unchanged contracts must leave inner code and explanations valid. Visibility does not determine ownership.
+
+Prefer pure transformations; queries may perform IO under reproducible contracts with explicit result-shaping dependencies. Pass capabilities as function parameters. Construct clients and resources at composition boundaries with explicit lifetime and cleanup. IO alone does not justify adapters, interfaces, or an artificial compute layer.
 
 ### Domain values and boundaries
 
-Keep types precise; confine unchecked values to dynamic boundaries. Use the repository's validation library at untrusted boundaries and validate important constraints at one construction gate. Limit validators to shape, basic constraints, and normalization; keep workflow logic and IO outside. Correct data or schema mismatches without widening types or weakening validation to conceal them. Use every accepted parameter and describe the whole result in the return contract.
+Use domain types for meaningful inputs and outcomes; encode valid states and alternatives with native types or schemas. Smart constructors establish trusted values once, using existing validation tools; keep workflow decisions and IO outside construction. Choose representations for the domain, without mandatory wrappers. Confine unchecked values to boundaries; fix mismatches without weakening types or validation. Use every parameter and describe the whole result in its contract.
 
 Translate models where assumptions or ownership change independently, such as transport, persistence, public APIs, and independently versioned components. Prefer explicit versions for externally consumed schemas. A directory or package label alone does not establish a boundary.
 
@@ -72,13 +74,13 @@ Translate models where assumptions or ownership change independently, such as tr
 
 Fail visibly on broken invariants and programmer errors. Do not revalidate guarantees already established by types or upstream validation, or model states with no real instance. Reject impossible states with one loud assertion. Speculative guards, fallbacks, and recovery for hypothetical inputs require user agreement.
 
-Represent expected compute failures and degraded outcomes in idiomatic return shapes. Reserve exceptions for unexpected failures, infrastructure errors, and framework-required paths. Catch specific exceptions for concrete recovery or re-raise with useful context; propagate the rest.
+Represent expected domain failures and degraded outcomes in idiomatic return shapes. Reserve exceptions for unexpected failures, infrastructure errors, and framework-required paths. Catch specific exceptions for concrete recovery or re-raise with useful context; propagate the rest.
 
 ### Tests as contracts
 
 For non-trivial changes, draft behavioral tests before implementation; resolve ambiguous promises with the user. Tests must detect broken contracts and survive harmless implementation changes. Remove tautologies that control both sides and mirrors that assert incidental details. Do not test wiring readable in one screen: flag parsing, pass-through arguments, import shims, environment branches, empty-input returns.
 
-Mock IO seams, not compute under test. Interaction assertions are valid when the call is the contract. Use unit tests for transformations and controlled integration tests for flows; live systems require authorization from the request and environment. Test owned behavior and assume dependencies' guarantees.
+Substitute external capabilities, not transformations or queries under test. Interaction assertions are valid when the call is the contract. Use unit tests for transformations and controlled integration tests for queries and flows; live systems require authorization. Test owned behavior and assume dependencies' guarantees.
 
 Mutation-check completed decisions and their tests: flip a condition, move a boundary, remove a decision-bearing branch, and try harmless edits. Use fresh context and an isolated agent when available, supplying the contract, code, and tests. An independent reviewer already assigned that scope can perform the check. Report undetected breaks and removable tests; retain the smallest suite that detects real decisions and survives harmless edits.
 
@@ -88,7 +90,7 @@ Add a regression test for contract-breaking bugs when an executable boundary exi
 
 ### Breaking changes
 
-Keep names private unless an external caller or planned API needs them. Re-export only to improve a public module boundary. For a requested break, determine compatibility from the request and repository; ask only about material unresolved choices. Once accepted, use one canonical interface without unrequested compatibility shims.
+Expose only contracts needed across a module boundary or by a planned API; keep implementation details private. Re-export only to clarify a public boundary. For requested breaks, resolve compatibility from the request and repository; clarify material unknowns. Use one canonical interface without unrequested shims.
 
 Before finishing a breaking change, search all textual forms of old names, signatures, data and persistence shapes, and paths across source, configuration, tests, documentation, and generated or serialized references. Resolve every survivor.
 
@@ -104,13 +106,13 @@ When they affect results, make these explicit in code and tests:
 
 ### Self-explanatory code as documentation
 
-Name entities and operations by domain role and action; use generic mechanism names only when they belong to established domain language. Comments and docstrings preserve constraints, tradeoffs, invariants, reasoning, and library footguns that names, types, and structure cannot express. Keep narration, changelog history, and debug breadcrumbs out of comments.
+Name entities and operations by domain role and action; use generic mechanism names only when they belong to established domain language. Comments and docstrings explain only what names, types, and structure cannot: domain meaning and invariants with types, rules with pure logic, mechanisms and library footguns with their owning implementations. Public docs describe semantic guarantees independently of implementation. Move misplaced explanations to their owning layer. Keep narration, changelog history, and debug breadcrumbs out of comments.
 
-Public, non-trivial APIs may need a brief semantic summary; private or trivial ones usually need no documentation. Prefer prose; use parameter, return, or failure sections only for constraints absent from the signature, and examples only for non-obvious usage. Keep comments out of SQL strings.
+Document non-obvious semantics regardless of visibility; public contracts may need a brief summary. Prefer prose; add parameter, return, or failure sections only for constraints absent from signatures, and examples only for non-obvious usage. Keep comments out of SQL strings.
 
 ## Durable artifacts
 
-Write artifacts for readers without the conversation. Keep durable mechanisms, invariants, constraints, and tradeoffs with the code; put point-in-time observations and verification evidence in commit or PR prose.
+Write artifacts for readers without the conversation. Keep durable invariants, mechanisms, constraints and tradeoffs at their owning layer; put point-in-time observations and verification evidence in commit or PR prose.
 
 Replace session-only references with repository-, issue-, or PR-visible ones, or remove them. Mention non-changes only when readers need the mechanism explaining an expected difference. Derive prose from the contract, removing debate framing and retaining negation or emphasis only when it carries meaning.
 
