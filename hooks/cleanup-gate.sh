@@ -61,7 +61,8 @@ else
   pattern='"skill": ?"cleanup"|<command-name>/cleanup</command-name>'
 fi
 offset=$(cat "$state/offset" 2>/dev/null || echo 0)
-if [[ -f "$transcript" ]] && tail -n +"$((offset + 1))" "$transcript" | grep -qE "$pattern"; then
+# Drain the tail so an early match cannot cause SIGPIPE under pipefail.
+if [[ -f "$transcript" ]] && tail -n +"$((offset + 1))" "$transcript" | grep -E "$pattern" > /dev/null; then
   baseline "$(snapshot)"; exit 0
 fi
 
