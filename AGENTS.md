@@ -36,39 +36,37 @@ Choose the smallest clean scope. Include refactors that protect correctness, bou
 
 Before designing a mechanism, inspect the closest existing analogue and check sibling modules, shared code, the standard library, and installed frameworks. Use established tools for solved domains such as migrations, scheduling, serialization; replacing them requires user agreement. Fix broken invariants in the layer that owns them. Start an investigation with the cheapest check that could falsify the question; resume an agent that already holds the context rather than spawning another.
 
+### Domain modeling and composition
+
+Default to functional domain modeling: types or schemas express domain meanings, valid states, and alternatives; functions express operations; workflows compose them. Use domain values for meaningful inputs and outcomes, preferring immutable representations that fit the repository without mandatory wrappers. Use every parameter and describe the whole result in its contract.
+
+Smart constructors establish trusted values once with existing validation tools. Keep workflow decisions and IO outside construction; confine unchecked values to boundaries and fix mismatches without weakening types or validation.
+
+Prefer pure transformations and explicit branching. Queries may perform IO when dependencies affecting results are explicit and the contract is reproducible. Business decisions belong in domain operations and workflows, not execution glue.
+
+### Contracts and execution boundaries
+
+Consumers define the capabilities they need; implementations depend on those contracts. Replacing an implementation under an unchanged contract must leave consumer logic and explanations valid. Pass capabilities as function parameters; construct clients and resources where workflows are assembled, with explicit lifetime and cleanup.
+
+Translate representations where assumptions or ownership change independently, not at every module boundary. Prefer explicit versions for externally consumed schemas. IO alone does not justify adapters, interfaces, or an artificial compute layer.
+
+### Decomposition and scope
+
+Organize by domain, not technical role. Distinct domain rules or transitions can justify separate operations; extract shared logic only at the third real occurrence. Keep trivial details at use sites: naming a step, staging work, or anticipating reuse does not justify a helper or layer.
+
+Use the narrowest scope that supports actual callers, independent testing, and resource lifetime. Expose only contracts required across module boundaries or by a planned API; keep implementation details private. Re-export only to clarify a public boundary.
+
 ### Contract-first review, top-down refinement
 
-Design from use cases: behavior, invariants, normal/boundary/failure examples, assumptions; then domain models, contracts, ownership, flow, and verification. Investigate interface feasibility before review.
+Start from required behavior, invariants, normal/boundary/failure examples, and assumptions. Investigate interface feasibility before review. Stage changes to domain types, public signatures, or data shapes; single-function and wiring changes skip staging:
 
-Stage changes to domain types, public signatures, or data shapes; single-function and wiring changes skip staging:
-
-1. **Models and contracts.** Encode domain meanings, valid states, and operation inputs/outcomes in types and signatures; define required capabilities and stub implementations. Pause for review of invariants, transitions, failures, and ownership.
-2. **Behavior and decomposition.** After approval, unfold use-case flows top down, keeping rules in domain logic. Stub straightforward details with explicit contracts at use sites or justified boundaries; follow the agreed design without prematurely extracting trivial helpers. Test implemented decisions, ordering, and failures with IO substitutes. Pause for review of behavior, decomposition, and assumptions.
-3. **Implementation and composition.** After the second approval, complete effects, wiring, and stubs. Refine decomposition from usage under the extraction and scope rules below. Run relevant tests, integration checks, and an authorized live smoke check; report unavailable verification.
+1. **Models and contracts.** Write the model, operation signatures, and required capability contracts with stubbed implementations. Pause for review of meanings, invariants, transitions, failures, and ownership.
+2. **Behavior and decomposition.** After approval, unfold workflows top down within the agreed design. Stub straightforward details with explicit contracts at use sites or justified boundaries. Avoid trivial helpers. Test implemented decisions, ordering, and failures with IO substitutes. Pause for review of behavior, decomposition, and assumptions.
+3. **Implementation and composition.** After the second approval, complete effects, wiring, and stubs; refine decomposition from actual usage. Run relevant tests, integration checks, and an authorized live smoke check; report unavailable verification.
 
 Plan approval preserves both pauses unless explicitly waived. At each pause, show code, decisions, each new name's domain meaning, assumptions, and review gaps. End the turn; await approval before any agent starts the next stage. Apply contract-preserving review findings; obtain approval for contract changes before extending implementation.
 
-Stubs must fail visibly; report incomplete-work failures separately from regressions. Business decisions belong in domain rules or use-case flows, not adapter glue. Staging does not justify new helpers, layers, or exports. For data or UI work, model schemas and keys or state and interactions before pipeline or screen wiring.
-
-### Functional thought, repository-respecting style
-
-Default to functional domain modeling: domain types carry meaning and guarantees; functions transform domain values; workflows compose them. Prefer immutable values and explicit branching. Adapt syntax and representations to the repository. Organize by domain, not technical role; avoid catch-all utility modules.
-
-Extract shared logic only at the third real occurrence. A domain operation may stand alone for its contract; trivial details stay at use sites. Text similarity, anticipated reuse, or a nameable step does not justify helpers.
-
-Give helpers the narrowest practical scope; broader scope needs reuse, independent testing, lifecycle, import boundaries, or clarity to justify it.
-
-### Domain ownership and dependencies
-
-Inner consumers own capability contracts; execution mechanisms satisfy them. Source dependencies follow semantic ownership inward, independently of runtime calls. Replacing outer implementations under unchanged contracts must leave inner code and explanations valid. Visibility does not determine ownership.
-
-Prefer pure transformations; queries may perform IO under reproducible contracts with explicit result-shaping dependencies. Pass capabilities as function parameters. Construct clients and resources at composition boundaries with explicit lifetime and cleanup. IO alone does not justify adapters, interfaces, or an artificial compute layer.
-
-### Domain values and boundaries
-
-Use domain types for meaningful inputs and outcomes; encode valid states and alternatives with native types or schemas. Smart constructors establish trusted values once, using existing validation tools; keep workflow decisions and IO outside construction. Choose representations for the domain, without mandatory wrappers. Confine unchecked values to boundaries; fix mismatches without weakening types or validation. Use every parameter and describe the whole result in its contract.
-
-Translate models where assumptions or ownership change independently, such as transport, persistence, public APIs, and independently versioned components. Prefer explicit versions for externally consumed schemas. A directory or package label alone does not establish a boundary.
+Stubs must fail visibly; report incomplete-work failures separately from regressions.
 
 ### Failure contracts
 
@@ -90,7 +88,7 @@ Add a regression test for contract-breaking bugs when an executable boundary exi
 
 ### Breaking changes
 
-Expose only contracts needed across a module boundary or by a planned API; keep implementation details private. Re-export only to clarify a public boundary. For requested breaks, resolve compatibility from the request and repository; clarify material unknowns. Use one canonical interface without unrequested shims.
+For requested breaks, resolve compatibility from the request and repository; clarify material unknowns. Use one canonical interface without unrequested shims.
 
 Before finishing a breaking change, search all textual forms of old names, signatures, data and persistence shapes, and paths across source, configuration, tests, documentation, and generated or serialized references. Resolve every survivor.
 
