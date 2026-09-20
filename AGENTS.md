@@ -120,7 +120,7 @@ Do not use em dashes in artifacts or replies. Use the intended connective or oth
 
 Prefer short, composable commands for one-off work and the repository's script mechanism for repeatable workflows. Use `rg`/`rg --files` for textual and file searches when available. Do not install global dependencies or create large throwaway scripts. Run the plainest form of a command from the current directory; a denied call is a permission fact, not a reason to degrade or hand back. Use the project's own environment before diagnosing it. Never block a turn on CI, a reviewer, or a background task; report state and end the turn.
 
-Git access is inspection-only. The user must run any operation that changes the worktree, index, refs, repository configuration, submodules, worktrees, or remotes.
+Git inspection and worktree creation (including new branches and required metadata) are allowed. All other Git mutations are user-operated.
 
 Do not create, publish, or update pull requests or other external artifacts unless the user explicitly requests that external action. During review, use the available remote-tracking refs and disclose when their freshness has not been verified.
 
