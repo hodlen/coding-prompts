@@ -4,8 +4,8 @@
 # objects, transcript records), never from markers the model types.
 set -euo pipefail
 
-THRESHOLD_LINES=${CLEANUP_GATE_LINES:-400}
-INTERVAL_SECS=${CLEANUP_GATE_SECS:-3600}
+THRESHOLD_LINES=${CLEANUP_GATE_LINES:-800}
+INTERVAL_SECS=${CLEANUP_GATE_SECS:-7200}
 STATE_TTL_DAYS=14
 
 input=$(cat)
