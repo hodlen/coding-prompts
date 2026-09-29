@@ -11,7 +11,7 @@ Target: the argument if given, else `git diff @{upstream}...HEAD` plus `git diff
 
 ## Phase 1: Review (4 angles)
 
-Use one fresh reviewer for all four angles. Split across agents only when the diff exceeds about 300 changed lines and spans independent modules. Give the reviewer only the diff, explicit constraints, and authorized implementation stage. Exclude session history, rationale, and prior agent output. Review user edits, including deletions, as the current design. Each finding names the file, line, issue, concrete cost, and existing or simpler alternative.
+Use one fresh reviewer for all four angles. Without agents, cover all four angles yourself. Split across agents only when the diff exceeds about 300 changed lines and spans independent modules. Give the reviewer only the diff, explicit constraints, and authorized implementation stage. Exclude session history, rationale, and prior agent output. Review user edits, including deletions, as the current design. Each finding names the file, line, issue, concrete cost, and existing or simpler alternative.
 
 ### Reuse
 
