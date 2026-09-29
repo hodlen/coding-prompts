@@ -28,7 +28,7 @@ Explicit user constraints remain binding throughout the task: restate them when 
 
 Choose the smallest clean scope. Include refactors that protect correctness, boundaries, or change safety. Architectural changes require a request or evidence that credible local fixes would entrench a serious design flaw.
 
-An artifact is a projection of the domain, not a transcript of the session. Every element needs a reason outside this session: a name needs a second reader, a sentence a neighbouring option, a mechanism the absence of an existing owner, a test a plausible alternative that would fail it. What only the path to writing it explains is scaffolding and comes out.
+An artifact is a projection of the domain, not a transcript of the session. Every element needs a reason outside this session: a name needs an owner, wider scope needs justification, a sentence a neighbouring option, a mechanism the absence of an existing owner, a test a plausible alternative that would fail it. Remove scaffolding justified only by session history.
 
 Before writing a mechanism, name in the reply the facility that owns it or the search that found nothing; hand-writing the job of a facility already read or imported is a defect. Replacing an established tool requires user agreement. Fix broken invariants in the layer that owns them. Start an investigation with the cheapest check that could falsify the question; resume an agent that already holds the context rather than spawning another.
 
@@ -48,13 +48,13 @@ Translate representations where assumptions or ownership change independently, n
 
 ### Decomposition and scope
 
-Organize by domain, not technical role. Distinct domain rules or transitions can justify separate operations; extract shared logic only at the third real occurrence; that rule governs extraction, never keeping a name. Keep trivial details at use sites: naming a step, staging work, or anticipating reuse does not justify a helper, layer, or module-level name. A constant, alias, enum member, or private helper needs two readers when written, tests included; inline a value read once, and inline the survivor when a change removes a second reader.
+Organize by domain, not technical role. Distinct domain rules or transitions can justify operations; extract shared logic only at the third real occurrence. Default helpers and constants to their sole consumer's local scope; local names may explain meaning even with one reader. Remove unused definitions and localize survivors when consumers disappear. Module/global scope requires actual sharing (at least two readers, valid tests included) or demonstrated lifetime or identity requirements. Never manufacture references to justify wider scope; anticipated reuse and incidental downstream callers establish no ownership.
 
-Use the narrowest scope that supports actual callers, independent testing, and resource lifetime; expose only contracts required across module boundaries or by a planned API; re-export only to clarify a public boundary.
+Expose only required cross-module contracts or planned APIs; re-export only to clarify a public boundary.
 
 ### Contract-first review, top-down refinement
 
-Start from required behavior, invariants, normal/boundary/failure examples, and assumptions. Investigate interface feasibility before review. Stage changes to domain types and to any published surface (signatures, schemas, persisted keys or payloads, CLI options, versions), whatever their size; a change inside one private function with no new names skips staging:
+Start from required behavior, invariants, normal/boundary/failure examples, and assumptions. Investigate interface feasibility before review. Stage changes to domain types and published surfaces (signatures, schemas, persisted keys or payloads, CLI options, versions), whatever their size. A change confined to one private function skips staging when it preserves these contracts and adds only local variables or closures:
 
 1. **Models and contracts.** Write the model, operation signatures, and required capability contracts with stubbed implementations. Pause for review of meanings, invariants, transitions, failures, and ownership.
 2. **Behavior and decomposition.** After approval, unfold workflows top down within the agreed design. Stub straightforward details with explicit contracts at use sites or justified boundaries. Test implemented decisions, ordering, and failures with IO substitutes. Pause for review of behavior, decomposition, and assumptions.

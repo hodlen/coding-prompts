@@ -19,7 +19,7 @@ Find reimplemented behavior in adjacent and shared modules; name the existing im
 
 ### Simplification
 
-Find redundant or derivable state, duplicated logic, deep nesting, dead code, and module-level names with one reader.
+Find redundant or derivable state, duplicated logic, deep nesting, dead code, and names scoped beyond their consumers or required lifetime.
 
 ### Efficiency
 
