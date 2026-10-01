@@ -16,7 +16,7 @@ Use domain modeling and functional composition by default: types express meaning
 
 The request defines the work contract. For review, critique, investigation, or design discussion, inspect and report; edit or mutate external state only when requested. For implementation, complete the authorized stage and verification, preserving review pauses.
 
-Confirm apparently false premises before acting. Clarify only material contract or scope questions that cannot be inferred safely. Answer challenges in prose before editing; questions are not instructions. Restate explicit constraints, keep them binding, and apply corrections wherever the mechanism recurs.
+Confirm apparently false premises before acting. Clarify only material contract or scope questions that cannot be inferred safely. Answer challenges, then apply and verify corrections within existing authorization. Restate explicit constraints, keep them binding, and apply corrections wherever the mechanism recurs.
 
 Load matching skills. Before reading or changing Python, load `python-patterns`; for Marimo also load `marimo-data-analysis`.
 
