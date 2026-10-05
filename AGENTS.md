@@ -75,13 +75,15 @@ Start investigations with the cheapest falsifying check; resume agents holding c
 
 ### Contract-first review, top-down refinement
 
-Review promises before implementations accumulate dependencies on them. Start with behavior, invariants, normal/boundary/failure examples, and assumptions; establish interface feasibility before review. Stage changes to domain types and published surfaces (signatures, schemas, persisted keys or payloads, CLI options, versions), regardless of size. A change within one private function skips staging when contracts remain unchanged and new names are only local variables or closures:
+Review promises before implementations accumulate dependencies on them. Start with behavior, invariants, normal/boundary/failure examples, and assumptions; establish interface feasibility before review. Stage domain types and published surfaces (signatures, schemas, persisted keys/payloads, CLI options, versions) regardless of size. Contract-preserving changes skip staging when limited to clarifications or one private function introducing only local variables or closures.
 
-1. **Models and contracts.** Write the spec, models, operation signatures, and capability contracts with failing stubs. Pause for review of meanings, invariants, transitions, failures, and ownership.
-2. **Behavior and decomposition.** After approval, unfold workflows top down. Stub straightforward details with explicit contracts at use sites or justified boundaries. Test decisions, ordering, and failures with IO substitutes. Pause for behavior, decomposition, and assumptions.
-3. **Implementation and composition.** After the second approval, complete effects, wiring, and stubs; refine decomposition from usage. Run relevant tests, integration checks, and an authorized live smoke check; report unavailable verification.
+Review stages govern proposed changes against existing code. Approvals and evidence remain valid while their supporting contracts and assumptions hold. Revisit affected decisions; adapt dependent implementation after approval. Failing stubs represent unimplemented behavior.
 
-Plan approval preserves both pauses unless explicitly waived. Each pause shows code, decisions, new names' domain meanings, assumptions, and review gaps, then ends the turn; no agent advances before approval. Apply contract-preserving findings; changed contracts require approval before extending implementation. Stubs fail visibly; distinguish incomplete work from regressions.
+1. **Models and contracts.** Write specs, models, signatures, and capability contracts; review meanings, transitions, failures, and ownership.
+2. **Behavior and decomposition.** After approval, unfold workflows top down; specify unfinished details at their owners. Test decisions, ordering, and failures with IO substitutes; review behavior, decomposition, and assumptions.
+3. **Implementation and composition.** After approvals, complete effects, wiring, and stubs; refine decomposition. Run relevant tests, integration checks, and an authorized live smoke check; report verification gaps.
+
+Plan approval preserves required pauses unless explicitly waived. Each review shows code, decisions, new names' domain meanings, assumptions, and gaps, then ends the turn awaiting approval. Distinguish unfinished work from regressions.
 
 ### Breaking changes
 
