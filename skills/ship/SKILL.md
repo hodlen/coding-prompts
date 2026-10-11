@@ -9,11 +9,11 @@ Authorizes creating the PR and working on follow-up fixes. Merging needs separat
 
 Apply `Durable artifacts` from the general instructions and supply that policy to artifact workers. Recheck artifacts against the final diff before merge.
 
-Assign clean agents non-overlapping local scopes to edit and verify, without session rationale. The main agent handles conflicts, ambiguity, design or public API decisions, and external publishing without reimplementing accepted fixes.
+Assign clean agents non-overlapping local scopes, accepted decisions and their reasons; verify conclusions independently. The main agent handles conflicts, unresolved contract decisions, and external publishing without reimplementing accepted fixes.
 
 Keep GitHub paragraphs on one line; hard-wrap only fenced blocks and tables.
 
-1. **Preflight.** `git status`, `git log origin/main..HEAD`, `gh pr list --head <branch> --state all`. Disclose unverified remote-tracking ref freshness. Require the completion stage: reviews approved or explicitly waived, stubs implemented, and verification run or limitations reported. Stop and ask on a pre-existing dirty worktree, the default branch, remote divergence, or a merged/closed PR for this branch; rebasing and force-pushing remain the user's decision.
+1. **Preflight.** `git status`, `git log origin/main..HEAD`, `gh pr list --head <branch> --state all`. Disclose unverified remote-tracking ref freshness. Require the completion stage: required review boundaries satisfied, stubs implemented, and verification run or limitations reported. Stop and ask on a pre-existing dirty worktree, the default branch, remote divergence, or a merged/closed PR for this branch; rebasing and force-pushing remain the user's decision.
 
 2. **PR.** `gh pr create`, or reuse the branch's existing **open** PR (`--state open`). Report the URL. Keep title and body concise and readable. Describe the final diff; support claims about jobs, consumers, or data with checks.
 
@@ -23,7 +23,7 @@ Keep GitHub paragraphs on one line; hard-wrap only fenced blocks and tables.
    - Give one clean `/code-review` agent the diff, explicit constraints, completion stage, and the remaining mutation scope under `Tests as contracts`. Treat its findings as reviewer comments: judge each against the request and repository (a wording finding gets a wording fix), and produce the concrete failing case before relaying one to the user; relay unverified only when verification needs data you cannot reach.
    - Sweep downstream only when the repository documents external consumers and the diff breaks a published package's public surface (removal, rename, incompatible signature, type, or schema, changed documented behavior); ask if eligibility is uncertain. Search broken symbols in non-archived consumer repos  (`gh search code --owner <org> "<symbol>"`), report confirmed impact in the PR body, and flag coordination needs without editing consumer repos.
 
-5. **Checks and feedback.** Snapshot `gh pr checks` and `gh pr view --comments` when `/ship` starts and whenever the user reports a push (pushes are the user's). Where the host supports background commands with completion notification, watch in the background. Fix local, behavior-preserving feedback; take design, public API, or behavior changes to the user first. Recheck decisions affected by later fixes under `Tests as contracts`. Explain declined feedback on the PR.
+5. **Checks and feedback.** Snapshot `gh pr checks` and `gh pr view --comments` when `/ship` starts and whenever the user reports a push (pushes are the user's). Where the host supports background commands with completion notification, watch in the background. Fix feedback within accepted contracts; resolve changes to agreed outcomes or scope with the user. Recheck decisions affected by later fixes under `Tests as contracts`. Explain declined feedback on the PR.
 
 6. **Merge (approval required).** Never merge, or arm `--auto`, while fixes sit uncommitted or unpushed or a verified reviewer finding is open; surface them instead. Choose the repository default, PR body, or a concise summary for readable commit history. Simplify Markdown as needed; avoid copying full artifact and keep useful artifact references. Never add or carry model attribution into PR or commit messages, including `Co-authored-by` trailers. Show any override with the approval request: merge now, stage `--auto`, or don't. Pass approved overrides via `--subject` and `--body-file`.
 
