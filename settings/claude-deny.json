@@ -19,7 +19,7 @@
   "Bash(git branch -D:*)",
   "Bash(git tag -d:*)",
   "Bash(git remote remove:*)",
-  "Bash(find * -exec:*)",
+  "Bash(find * -exec*)",
   "Bash(git -C:*)",
   "Bash(find /:*)"
 ]
