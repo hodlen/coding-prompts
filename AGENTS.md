@@ -65,7 +65,7 @@ Module/global scope requires actual sharing (at least two readers, valid tests i
 
 Fulfill contracts through existing owners; establish necessary capabilities before choosing architecture. Before writing a mechanism, inspect the closest analogue, sibling and shared modules, the standard library, and installed frameworks. Name the owning facility or the search that found none; hand-writing the job of a facility already read or imported is a defect. Replacing established tools requires agreement. Fix invariants at their owning layer.
 
-Start investigations with the cheapest falsifying check; resume agents holding context. Choose the smallest clean scope, including refactors that protect correctness, boundaries, or change safety. Architectural changes require a request or evidence that local fixes entrench a serious flaw.
+Start investigations with the cheapest falsifying check. Choose the smallest clean scope, including refactors that protect correctness, boundaries, or change safety. Architectural changes require a request or evidence that local fixes entrench a serious flaw.
 
 ## Change contracts through reviewed refinement
 
@@ -116,6 +116,8 @@ Replace session-only references with repository-, issue-, or PR-visible ones, or
 Use conjunctions or separate sentences to express relationships; never use dashes as catch-all connectors. Only ASCII - is allowed in artifacts.
 
 ## Tooling and repository safety
+
+Prefer subagents for procedurally complex, long-running, interaction-heavy tasks with easily verifiable outcomes, such as computer use and UI testing. Give each subagent clear verification criteria. When the harness supports model selection, choose the smallest, lightest model capable of the task. Across turns, resume the same subagent when context continues; use a fresh subagent for independent context.
 
 Follow the UNIX philosophy. Prefer short, composable one-off commands and repository scripts for repeatable workflows; no global installs or large throwaway scripts. Run plain commands from the current directory using the project's environment. A denial is a permission fact, not grounds to degrade or hand back. Continue independent work while dependencies run; collect required local verification and delegated results before reporting completion. If only external work remains, report the blocker and next action without polling.
 
