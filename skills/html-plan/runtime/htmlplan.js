@@ -1,6 +1,7 @@
 /* htmlplan.js — runtime for coding artifacts.
    One file, no dependencies. Registers <doc-*> elements, builds the TOC,
-   collects answers/comments/edits into one copyable response.
+   collects answers/comments/edits into one response, with an optional review receiver.
+   Local review IO contract: ../references/review-io.md
    Pure parsers are exposed on globalThis.HtmlPlan so pack.mjs can lint with them. */
 (function () {
 'use strict';
@@ -419,6 +420,23 @@ NW.diffWords = function diffWords(a, b) {
   return out;
 };
 
+/** Send Markdown with fetchResponse and invoke onReceived only after a positive ACK.
+    HTTP, network, and missing-ACK failures reject without invoking onReceived.
+    The caller owns any visible receipt and attempt to close the page. */
+NW.sendResponse = async function sendResponse(endpoint, markdown, fetchResponse, onReceived) {
+  const response = await fetchResponse(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+    credentials: 'omit',
+    redirect: 'error',
+    body: markdown,
+  });
+  if (!response.ok) throw new Error(`Response not confirmed (HTTP ${response.status}).`);
+  const acknowledgement = await response.json();
+  if (acknowledgement.received !== true) throw new Error('The receiver did not acknowledge the response.');
+  onReceived();
+};
+
 globalThis.HtmlPlan = NW;
 if (!HAS_DOM) { if (typeof module !== 'undefined') module.exports = NW; return; }
 
@@ -461,7 +479,7 @@ document.addEventListener('pointerdown', (e) => { if (pop && !pop.contains(e.tar
 function openComment({ key, label, anchor, extra, onState }) {
   closePop();
   const cur = S.comments[key]?.text || '';
-  const ta = h('textarea', { placeholder: 'Comment for Claude…' }); ta.value = cur;
+  const ta = h('textarea', { placeholder: 'Comment on the plan' }); ta.value = cur;
   const del = h('button', { class: 'nw-btn danger', onclick: () => { delete S.comments[key]; onState?.(false); save(); closePop(); } }, 'Remove');
   pop = h('div', { class: 'nw-pop', role: 'dialog' },
     h('div', { class: 'ref' }, label), extra || null, ta,
@@ -616,23 +634,47 @@ function openSheet(title, bodyNodes, footerNodes) {
       h('div', { class: 'body' }, bodyNodes), footerNodes ? h('footer', null, footerNodes) : null));
   document.body.append(sheetBg);
 }
-function openResponse() {
+let responseState = 'ready';
+async function openResponse() {
   const r = buildResponse();
+  const endpoint = $('meta[name="htmlplan-response"]')?.content;
+  if (endpoint) {
+    if (responseState !== 'ready') return;
+    responseState = 'sending';
+    refreshChrome();
+    try {
+      await NW.sendResponse(endpoint, r.md, window.fetch.bind(window), () => {
+        responseState = 'received';
+        refreshChrome();
+        openSheet('Response received', [h('p', null, 'Your response was saved. You can close this page.')]);
+        window.close();
+      });
+    } catch (error) {
+      if (responseState === 'received') throw error;
+      responseState = 'ready';
+      refreshChrome();
+      openSheet('Response not confirmed', [h('p', null, error.message), h('p', null, 'Your feedback is still on this page.'), h('pre', null, r.md)]);
+    }
+    return;
+  }
   const pre = h('pre', null, r.md);
   const ans = readAnswers(); const asks = $$('doc-ask'); const nTodo = asks.filter((a) => askTodo(a, ans)).length;
   const list = asks.length ? h('div', { class: 'nw-asks' }, h('div', { class: 'ttl' }, 'Decisions', h('b', { class: nTodo ? 'todo' : '' }, nTodo ? `${nTodo} to answer` : 'all answered')),
     asks.map((a, i) => { const st = askChanged(a, ans) ? 'changed' : S.seen[a.id] ? 'kept' : 'todo'; const no = a.closest('doc-claim')?.dataset.no;
       return h('button', { class: 'nw-askrow ' + st, onclick: () => goToAsk(a) }, h('span', { class: 'k' }, String(i + 1)), h('span', { class: 'q' }, askQ(a, i), h('small', null, [no ? `claim ${no}` : '', words(askPick(a, ans), 9)].filter(Boolean).join(' · '))), h('span', { class: 's' }, st === 'todo' ? 'to answer' : st === 'kept' ? 'as proposed' : 'changed')); })) : null;
-  const state = h('span', { class: 'nw-send-state' });
-  const liveOn = false, send = null;
-  const copy = h('button', { class: 'nw-btn' + (liveOn ? '' : ' primary'), onclick: async () => { try { await navigator.clipboard.writeText(r.md); toast('Copied — paste it back to Claude'); } catch { const ta = h('textarea'); ta.value = r.md; document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast('Copied'); } } }, 'Copy response');
+  const copy = h('button', { class: 'nw-btn primary', onclick: async () => { try { await navigator.clipboard.writeText(r.md); toast('Response copied'); } catch { const ta = h('textarea'); ta.value = r.md; document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast('Response copied'); } } }, 'Copy response');
   const reset = h('button', { class: 'nw-btn danger', onclick: () => { if (reset.dataset.arm !== '1') { reset.dataset.arm = '1'; reset.textContent = 'Clear everything?'; setTimeout(() => { reset.dataset.arm = ''; reset.textContent = 'Reset'; }, 3000); return; } S.comments = {}; S.drafts = {}; S.strikes = {}; S.seen = {}; writeAnswers(S.defaults); $$('doc-calls').forEach((d) => d._reset?.()); $$('doc-draft, doc-schema').forEach((d) => d._reset?.()); try { localStorage.removeItem(KEY); } catch {} $$('.has-comment').forEach((e) => e.classList.remove('has-comment')); onFormChange(); closeSheet(); toast('Reset'); } }, 'Reset');
-  openSheet('Your response', [list, h('p', { class: 'hint' }, liveOn ? 'This goes to Claude when you press Send.' : 'Copy this and paste it to Claude.'), pre], [reset, state, h('span', { class: 'sp' }), copy, send]);
+  openSheet('Your response', [list, h('p', { class: 'hint' }, 'Copy this response back to your agent.'), pre], [reset, h('span', { class: 'sp' }), copy]);
 }
 function refreshChrome() {
   if (!bar) return;
   const r = buildResponse(); const n = r.nChanged + r.nComments + r.nDrafts;
   const btn = bar.querySelector('.nw-respond'); btn.innerHTML = '';
+  btn.disabled = responseState !== 'ready';
+  if (responseState !== 'ready') {
+    btn.textContent = responseState === 'sending' ? 'Sending...' : 'Received';
+    return;
+  }
   const ans = readAnswers(); const asks = $$('doc-ask'); const nTodo = asks.filter((a) => askTodo(a, ans)).length;
   btn.append(r.nAsks || n ? 'Respond' : 'Comment', n ? h('span', { class: 'n' }, String(n)) : (asks.length && !nTodo ? h('span', { class: 'n ok' }, '✓') : ''));
   const nx = bar.querySelector('.nw-next'); nx.hidden = !nTodo; nx.textContent = `${nTodo} to answer ↓`;
