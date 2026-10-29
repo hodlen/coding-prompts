@@ -140,11 +140,11 @@ These are not STE and stay as they are: the words of the user in a `doc-quote`, 
 
 1. **Read first.** Find the entrypoints, records and screens the change touches. Note exact paths, lines and the user's words.
 2. **Write the level-1 claims** and read them aloud. Fix them before anything else.
-3. **Add the how and where claims, then the exhibits, then the decisions.** Read `references/blocks.md` for syntax. Save the page where the project keeps docs, or in a scratch folder.
+3. **Add the how and where claims, then the exhibits, then the decisions.** Read `references/blocks.md` for syntax. Save the page where the project keeps docs, or in the task state directory (see `Agent ledgers`).
 4. **Pack.** `node <skill dir>/runtime/pack.mjs plan.html --root <repo>`. It reports errors and warnings by line or claim number. Fix them. It writes `plan.packed.html`, one file that works offline.
 5. **Look at it** in a browser if you can: closed, with each claim open, and at each decision (the “to answer” button goes to them). Check that mockups are not clipped and arrows do not cross labels. Use the review URL for an interactive review or the packed file for a reading-only handoff, as described above.
 6. **Hand it over** (next section) with one line: “Four decisions. The defaults are what I would build.”
-7. **Act on the response.** Apply changed decisions, schema edits, struck calls and each comment. Refer to claims by number. If the answers change the shape of the plan, update the page and send it again. Then build.
+7. **Act on the response.** Apply changed decisions, schema edits, struck calls and each comment. Refer to claims by number. If the answers change the shape of the plan, update the page and send it again. Then update the applicable task sections in the contract ledger (`Agent ledgers` in the general instructions) from the level-1 and level-2 claims, each decision with its answer, and the `aux="scope"` claim, referencing shared agreements; record a decision marked `_(not opened; default kept)_` as unconfirmed, not approved. Hand off the ledger path and sections. Then build.
 
 ## Getting the answer back
 

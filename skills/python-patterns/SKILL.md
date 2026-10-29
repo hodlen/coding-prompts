@@ -7,5 +7,6 @@ description: Python-specific compatibility, pandas, and cached-resource lifetime
 
 - For Python 3.12+ projects using PEP 695, prefer inline generics over new `TypeVar`/`Generic` scaffolding.
 - Use `df["column"]` for pandas column access instead of `df.column`.
+- Pass `how=` and `validate=` (`"1:1"`, `"m:1"`) to every pandas `merge`/`join`; use `merge(..., indicator=True)` to count unmatched keys when the unmatched-key policy matters.
 - Normalize columns and types so pandas pipelines accept empty DataFrames. Guard `df.empty` only before operations requiring rows, such as `.iloc[0]`.
 - Use `@functools.cache` on resource constructors only when shared lifetime and cleanup semantics are safe.

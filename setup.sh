@@ -2,6 +2,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# Per-task agent state (ledgers, journals) is written by the agent, so it lives
+# outside the workspace: Codex keeps .git and .agents inside it read-only.
+export AGENT_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/agents"
 
 merge_claude_deny_rules() {
   local settings_path="$HOME/.claude/settings.json"
@@ -56,7 +59,46 @@ merge_cleanup_hooks() {
   mv "$tmp" "$path"
 }
 
+grant_claude_state_dir() {
+  local settings_path="$HOME/.claude/settings.json"
+  local settings_tmp
+
+  command -v jq >/dev/null || {
+    echo "jq is required to grant the agent state directory to Claude Code." >&2
+    return 1
+  }
+
+  [[ -f "$settings_path" ]] || echo '{}' > "$settings_path"
+  settings_tmp="$(mktemp "$settings_path.XXXXXX")"
+  jq '
+    .permissions = (.permissions // {})
+    | .permissions.additionalDirectories = ((.permissions.additionalDirectories // [])
+        | if index(env.AGENT_STATE_DIR) then . else . + [env.AGENT_STATE_DIR] end)
+  ' "$settings_path" > "$settings_tmp"
+  mv "$settings_tmp" "$settings_path"
+}
+
+grant_codex_state_dir() {
+  local config_path="$HOME/.codex/config.toml"
+  local config_tmp
+
+  yq --version 2>/dev/null | grep -q mikefarah || {
+    echo "mikefarah/yq v4 is required to grant the agent state directory to Codex." >&2
+    return 1
+  }
+
+  [[ -f "$config_path" ]] || : > "$config_path"
+  # Skip present entries: a yq round trip reflows comments in multi-line arrays.
+  [[ "$(yq -p toml -o yaml '.sandbox_workspace_write.writable_roots // [] | any_c(. == strenv(AGENT_STATE_DIR))' "$config_path")" == true ]] && return 0
+  config_tmp="$(mktemp "$config_path.XXXXXX")"
+  yq -p toml -o toml '.sandbox_workspace_write.writable_roots += [strenv(AGENT_STATE_DIR)]' "$config_path" > "$config_tmp"
+  # The round trip can drop comments inside arrays; show the rewrite.
+  diff -u "$config_path" "$config_tmp" >&2 || true
+  mv "$config_tmp" "$config_path"
+}
+
 mkdir -p \
+  "$AGENT_STATE_DIR" \
   "$HOME/.claude/skills" \
   "$HOME/.claude/commands" \
   "$HOME/.codex/rules" \
@@ -69,6 +111,8 @@ ln -sfn "$SCRIPT_DIR/settings/codex-deny.rules" "$HOME/.codex/rules/coding-promp
 merge_claude_deny_rules
 merge_cleanup_hooks "$HOME/.claude/settings.json"
 merge_cleanup_hooks "$HOME/.codex/hooks.json"
+grant_claude_state_dir
+grant_codex_state_dir
 
 # Per-item symlinks so ~/.claude/{skills,commands} and ~/.agents/skills can
 # co-host third-party tools (e.g. gstack) without polluting this repo.
