@@ -11,6 +11,23 @@ Target: the argument if given, else `git diff @{upstream}...HEAD` plus `git diff
 
 ## Phase 1: Review (4 angles)
 
+Before review, resolve the target to existing source files supported by the tools, excluding tests, generated files and dependencies. For a ref target, compare its merge base with HEAD to the worktree and include untracked source files. Native `--changed` covers working-tree changes only; it does not select the full branch diff. Skip analysis when no supported source files are in scope.
+
+Metrics belong to the analyzed worktree in `.metrics/`, excluded through the global Git ignore file by `install.py`. Use reports whose source and analysis inputs match the reviewed code; retained reports are evidence only while those inputs remain applicable.
+
+Run from the worktree root and collect reports for the reviewer:
+
+```sh
+crapper --coverage-command '<project coverage command>' <source files>
+dryer
+```
+
+Use an explicit project coverage command, or `--no-coverage` for complexity alone. The command must write the reports crapper reads (`crapper --help`). Check coverage failures and all-zero reports explicitly: a successful exit does not establish valid coverage. Record unavailable coverage or tools as verification gaps. Run dryer across the tree so unchanged implementations remain comparison partners; review the pairs involving the target files.
+
+Record report paths in the ledger and retain evidence needed for resumption or acceptance in the durable task record.
+
+Signals are candidates, not targets. A CRAP score above 10 asks whether a promised behavior lacks a test or one function mixes decisions; accept case dispatch with its reason. A duplicate pair feeds Reuse and the third-occurrence rule. Never split, extract, or add tests only to move a score.
+
 Use one fresh reviewer for all four angles. Without agents, cover all four angles yourself. Split across agents only when the diff exceeds about 300 changed lines and spans independent modules. Give the reviewer the diff, authorized scope, explicit constraints, accepted decisions and their reasons, and ledger paths with applicable sections (see `Agent ledgers`) if present. Verify conclusions independently. Review user edits, including deletions, as the current design. Each finding names the file, line, issue, concrete cost, and existing or simpler alternative.
 
 ### Reuse
