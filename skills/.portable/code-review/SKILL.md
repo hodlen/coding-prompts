@@ -11,7 +11,7 @@ Report material defects, excluding style preferences. Target resolution as in `/
 
 - **Correctness.** Wrong results or crashes with a concrete failure scenario.
 - **Contracts.** Broken invariants; key, uniqueness, and join grain; temporal and timezone boundaries; nullability; validation silently loosened instead of the data shape fixed; applicable ledger contracts the diff drops or weakens; changes outside authorized scope.
-- **Tests.** Tautologies (the test controls both sides), mirrors (fails on harmless change), and contract branches with no test that would fail. Survivors in the worktree's `.metrics/mutate/`, or reports retained with task evidence, are candidates when their inputs match the reviewed code.
+- **Tests.** Tautologies (the test controls both sides), mirrors (fails on harmless change), and contract branches with no test that would fail. Survivors from a mutator run on the reviewed diff, in the worktree's `.metrics/mutate/` or retained with task evidence, are candidates; reports from earlier code are not.
 - **Compatibility.** Breaking changes to a public surface with silent survivors (old names, schemas, serialized shapes) or undisclosed consumer impact.
 - **Artifacts.** Docstrings, docs, or PR text that misstate what the code does.
 

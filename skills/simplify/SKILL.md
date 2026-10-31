@@ -11,16 +11,16 @@ Target: the argument if given, else `git diff @{upstream}...HEAD` plus `git diff
 
 ## Phase 1: Review (4 angles)
 
-Before review, resolve the target to existing source files supported by the tools, excluding tests, generated files and dependencies. For a ref target, compare its merge base with HEAD to the worktree and include untracked source files. Native `--changed` covers working-tree changes only; it does not select the full branch diff. Skip analysis when no supported source files are in scope.
-
 Metrics belong to the analyzed worktree in `.metrics/`, excluded through the global Git ignore file by `install.py`. Use reports whose source and analysis inputs match the reviewed code; retained reports are evidence only while those inputs remain applicable.
 
 Run from the worktree root and collect reports for the reviewer:
 
 ```sh
-crapper --coverage-command '<project coverage command>' <source files>
+crapper --changed-since <ref> --coverage-command '<project coverage command>'
 dryer
 ```
+
+`--changed-since` selects the target's source files: changes since the merge base of `<ref>` and HEAD, including untracked files, without tests. Use a ref target as `<ref>`, and `@{upstream}` (falling back to `main`) for the default target; pass path targets as paths instead. `--changed` covers uncommitted work only.
 
 Use an explicit project coverage command, or `--no-coverage` for complexity alone. The command must write the reports crapper reads (`crapper --help`). Check coverage failures and all-zero reports explicitly: a successful exit does not establish valid coverage. Record unavailable coverage or tools as verification gaps. Run dryer across the tree so unchanged implementations remain comparison partners; review the pairs involving the target files.
 

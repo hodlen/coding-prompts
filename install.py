@@ -31,14 +31,11 @@ def main() -> None:
     repo = Path(__file__).resolve().parent
     user_dir = Path.home()
     state = Path(os.environ.get("XDG_STATE_HOME") or user_dir / ".local/state") / "agents"
-    revisions = {
-        "crapper": "6fd92c4c9bcc56efb64a2f8743d5a2993bcfd42d",
-        "dryer": "66ff6d21a42c04afcad89c78a80066176d1294b0",
-        "mutator": "a5a0cb803b66e0cdb8bf471b3b08af701d424a41",
-    }
+    # Forks of the unclebob tools; crapper and mutator carry --changed-since.
+    # Each install follows the forks' default branches.
     packages = {
-        name: f"{name} @ git+https://github.com/unclebob/{name}@{revision}"
-        for name, revision in revisions.items()
+        name: f"{name} @ git+https://github.com/hodlen/{name}"
+        for name in ("crapper", "dryer", "mutator")
     }
     # mutator imports crapper; exporting all three from one environment keeps
     # that undeclared upstream dependency available without sibling checkouts.
@@ -54,7 +51,6 @@ def main() -> None:
         "import tree_sitter_language_pack as t; "
         "t.download(['python', 'java', 'go', 'typescript', 'tsx', 'javascript', 'rust', 'clojure'])",
     ], check=True)
-    subprocess.run(["uv", "tool", "update-shell"], check=True)
 
     def write_if_changed(path: Path, content: str) -> None:
         if path.exists() and path.read_text(encoding="utf-8") == content:
@@ -80,9 +76,15 @@ def main() -> None:
     # Follow an existing symlink so installing does not replace the user's link.
     ignore_path = ignore_path.resolve()
     ignored = ignore_path.read_text(encoding="utf-8") if ignore_path.exists() else ""
-    if "/.metrics/" not in ignored.splitlines():
+    # Tool metrics and the coverage reports they read stay out of status, commits,
+    # and the cleanup gate's line count.
+    missing = [
+        pattern for pattern in ("/.metrics/", "/.coverage", "/target/coverage/")
+        if pattern not in ignored.splitlines()
+    ]
+    if missing:
         separator = "\n" if ignored and not ignored.endswith("\n") else ""
-        write_if_changed(ignore_path, ignored + separator + "/.metrics/\n")
+        write_if_changed(ignore_path, ignored + separator + "".join(f"{pattern}\n" for pattern in missing))
 
     def default_if_null(settings: dict, key: str, empty):
         if settings.get(key) is None:
@@ -94,6 +96,20 @@ def main() -> None:
         hooks = default_if_null(settings, "hooks", {})
         for event in ("SessionStart", "Stop"):
             groups = default_if_null(hooks, event, [])
+            # A moved or renamed checkout leaves gate entries that point nowhere.
+            emptied = []
+            for group in groups:
+                current = group.get("hooks") or []
+                kept = [
+                    hook for hook in current
+                    if hook.get("command") == command
+                    or not str(hook.get("command", "")).endswith("/hooks/cleanup-gate.sh")
+                ]
+                if len(kept) != len(current):
+                    group["hooks"] = kept
+                    if not kept:
+                        emptied.append(id(group))
+            groups[:] = [group for group in groups if id(group) not in emptied]
             if not any(
                 hook.get("command") == command
                 for group in groups for hook in (group.get("hooks") or [])
@@ -149,6 +165,11 @@ def main() -> None:
     for source in sorted((repo / "commands").glob("*")):
         if not source.name.startswith("."):
             link(source, user_dir / ".claude/commands" / source.name)
+
+    # Last, and not fatal: uv exits 2 when shell files are already updated but
+    # this shell's PATH predates them, as on a rerun before restarting.
+    if subprocess.run(["uv", "tool", "update-shell"]).returncode != 0:
+        print("Put the directory from `uv tool dir --bin` on PATH to use the tools.")
 
 
 if __name__ == "__main__":

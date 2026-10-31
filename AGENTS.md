@@ -124,7 +124,7 @@ Ledgers and journals hold session history outside durable-artifact rules; durabl
 
 Store them apart from scratch in `${XDG_STATE_HOME:-~/.local/state}/agents/<repo-or-project>/<branch-or-topic>-<YYYY-MM-DD>/`. Use the task's start date; reuse its directory across sessions and days.
 
-Reuse the ledger's recorded scratch directory by default; create another when isolation is needed and record its path. Create scratch directories with `mktemp -d "${TMPDIR:-/tmp}/<repo-or-project>-<branch-or-topic>-XXXXXX"` using filename-safe labels. Preserve necessary evidence in the ledger before scratch is removed.
+Create scratch with `mktemp -d "${TMPDIR:-/tmp}/<repo-or-project>-<branch-or-topic>-XXXXXX"` and link it from the task directory under a descriptive name. Reuse linked scratch by default; add another for isolation. Copy evidence into the task directory, never link it, before relying on it.
 
 For approved plans/contracts or work spanning review stages, create `CONTRACT.md` if absent with YAML frontmatter `status: active`. Group numbered outcomes, scope and exclusions, approved contracts with examples, decisions with reasons, delegations, and follow-ups by task. Reference shared agreements. Record all user decisions; only these change agreements. Maintain progress and evidence. Keep follow-ups here without separate TODO files; organize other session notes freely.
 
