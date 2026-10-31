@@ -20,7 +20,7 @@ For review, critique, investigation, or design discussion, inspect and report; e
 
 Confirm apparently false premises before acting. Clarify only material contract or scope questions that cannot be inferred safely. Answer challenges, then apply and verify corrections within existing authorization, at their owners and wherever the same mechanism recurs in scope.
 
-Load matching skills. Before reading or changing Python, load `python-patterns`; for Marimo also load `marimo-data-analysis`. For datasets, pipelines, or analysis that transforms data, load `data-engineering`.
+Load matching skills. Before reading or changing Python, load `python-patterns`; for Marimo also load `marimo-patterns`. For datasets, pipelines, or analysis that transforms data, load `data-engineering`.
 
 ## Model the contract
 

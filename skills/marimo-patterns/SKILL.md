@@ -1,5 +1,5 @@
 ---
-name: marimo-data-analysis
+name: marimo-patterns
 description: Reactive graph, display, setup, and execution caveats for reading or editing Marimo notebooks. Use alongside python-patterns.
 ---
 
